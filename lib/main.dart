@@ -5,6 +5,7 @@ import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/pages/home_page.dart';
 import 'package:lautanrejeki/pages/login_page.dart';
 import 'package:lautanrejeki/pages/register_page.dart';
+import 'package:lautanrejeki/pages/splash_screen.dart';
 
 import 'package:lautanrejeki/repositories/auth_repository.dart';
 import 'package:lautanrejeki/repositories/attendance_repository.dart';
@@ -63,14 +64,7 @@ class MyApp extends StatelessWidget {
 
               title: 'Lautan Rejeki',
 
-              theme: ThemeData(
-                colorScheme:
-                ColorScheme.fromSeed(
-                  seedColor: Colors.deepPurple,
-                ),
-              ),
-
-              home: const LoginPage(),
+              home: const SplashScreen(),
 
               onGenerateRoute: generateRoute,
             ),
@@ -100,13 +94,8 @@ class MyApp extends StatelessWidget {
 
       case '/home':
 
-        final token =
-        settings.arguments as String;
-
         return MaterialPageRoute(
-          builder: (_) => HomePage(
-            token: token,
-          ),
+          builder: (_) => HomePage(),
         );
 
       default:
