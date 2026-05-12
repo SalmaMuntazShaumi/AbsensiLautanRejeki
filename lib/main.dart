@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/components/bottom_navbar.dart';
@@ -13,7 +14,10 @@ import 'package:lautanrejeki/repositories/attendance_repository.dart';
 
 import 'bloc/attendance/attendance_bloc.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('id_ID', null);
   runApp(const MyApp());
 }
 

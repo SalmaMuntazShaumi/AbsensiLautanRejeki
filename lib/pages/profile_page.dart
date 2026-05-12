@@ -68,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
         centerTitle: true,
 
         title: const Text(
-          'Profile',
+          'Profil',
           style: TextStyle(
             color: AppColors.textColor,
             fontWeight: FontWeight.bold,

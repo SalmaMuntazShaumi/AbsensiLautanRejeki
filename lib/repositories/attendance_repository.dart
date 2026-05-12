@@ -1,11 +1,13 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:lautanrejeki/models/attendance_history_model.dart';
 
 import '../models/attendance_model.dart';
 
 class AttendanceRepository {
 
   final Dio dio = Dio(
-
     BaseOptions(
       baseUrl: 'http://192.168.0.31:8000/',
     ),
@@ -127,6 +129,47 @@ class AttendanceRepository {
 
       throw Exception(
         'Check out failed: $e',
+      );
+    }
+  }
+
+  Future<List<AttendanceHistoryModel>>
+  fetchAttendanceHistory(
+      String token,
+      ) async {
+
+    try {
+
+      final response = await dio.get(
+
+        '/api/history',
+
+        options: Options(
+          headers: {
+
+            'Accept': 'application/json',
+
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      final List data =
+      response.data['data'];
+
+      print(response.data);
+
+      return data.map((item) {
+
+        return AttendanceHistoryModel
+            .fromJson(item);
+
+      }).toList();
+
+    } catch (e) {
+
+      throw Exception(
+        'Failed to fetch history: $e',
       );
     }
   }
