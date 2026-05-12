@@ -40,19 +40,19 @@ class CustomBottomNavbar extends StatelessWidget {
           _buildNavItem(
             index: 0,
             icon: CupertinoIcons.house_alt,
-            label: 'Home',
+            label: 'Dashboard',
           ),
 
           _buildNavItem(
             index: 1,
             icon: CupertinoIcons.clock_fill,
-            label: 'History',
+            label: 'Riwayat',
           ),
 
           _buildNavItem(
             index: 2,
             icon: CupertinoIcons.person_fill,
-            label: 'Profile',
+            label: 'Profil',
           ),
         ],
       ),
