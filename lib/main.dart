@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
-import 'package:lautanrejeki/pages/home_page.dart';
+import 'package:lautanrejeki/components/bottom_navbar.dart';
 import 'package:lautanrejeki/pages/login_page.dart';
+import 'package:lautanrejeki/pages/main_page.dart';
 import 'package:lautanrejeki/pages/register_page.dart';
 import 'package:lautanrejeki/pages/splash_screen.dart';
 
@@ -92,10 +93,10 @@ class MyApp extends StatelessWidget {
           builder: (_) => const RegisterPage(),
         );
 
-      case '/home':
+      case '/main':
 
         return MaterialPageRoute(
-          builder: (_) => HomePage(),
+          builder: (_) => const MainPage(),
         );
 
       default:
