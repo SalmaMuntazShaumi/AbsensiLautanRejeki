@@ -5,14 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lautanrejeki/bloc/attendance/attendance_bloc.dart';
 import 'package:lautanrejeki/components/custom_absent_card.dart';
 import 'package:lautanrejeki/repositories/users_repository.dart';
+import 'package:lautanrejeki/services/session_service.dart';
 
 import '../bloc/attendance/attendance_event.dart';
 import '../src/colors.dart';
 
 class HomePage extends StatefulWidget {
-  final String token;
 
-  const HomePage({super.key, required this.token});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -22,30 +22,50 @@ class _HomePageState extends State<HomePage> {
   final UsersRepository userRepo = UsersRepository();
 
   String name = '';
+  String token = '';
+
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
 
-    fetchUser();
+    initUser();
+  }
+
+  Future<void> initUser() async {
+
+    final savedToken =
+    await SessionService.getToken();
+
+    if (savedToken == null) {
+      return;
+    }
+
+    token = savedToken;
 
     context.read<AttendanceBloc>().add(
       GetAttendanceToday(
-        token: widget.token,
+        token: token,
       ),
     );
+
+    await fetchUser();
   }
 
   Future<void> fetchUser() async {
     try {
-      final data = await userRepo.fetchUserData(widget.token);
+
+      final data =
+      await userRepo.fetchUserData(token);
 
       setState(() {
         name = data['name'];
         isLoading = false;
       });
+
     } catch (e) {
+
       setState(() {
         name = 'Error';
         isLoading = false;
@@ -55,9 +75,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),
         child: SafeArea(
@@ -98,8 +120,7 @@ class _HomePageState extends State<HomePage> {
                 color: AppColors.textColor,
               ),
             ),
-            CustomAbsentCard(token: widget.token,)
-          ],
+            CustomAbsentCard(token: token)          ],
         ),
       ),
     );

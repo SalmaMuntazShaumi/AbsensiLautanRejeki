@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_event.dart';
 import 'package:lautanrejeki/bloc/auth/auth_state.dart';
 import 'package:lautanrejeki/repositories/auth_repository.dart';
+import 'package:lautanrejeki/services/session_service.dart';
 
 /// AuthBloc handles all authentication-related events and emits appropriate states
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -19,23 +20,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Handle login request event
   Future<dynamic> _onLoginRequested(
-    LoginRequested event,
-    Emitter<AuthState> emit,
-  ) async {
+      LoginRequested event,
+      Emitter<AuthState> emit,
+      ) async {
     emit(const AuthLoading());
+
     try {
       final userData = await _authRepository.login(
         email: event.email,
         password: event.password,
       );
 
-      // Extract token if available, otherwise use a default or handle accordingly
       final token = userData['token'];
-      emit(AuthSuccess(
-        message: 'Login successful',
-        userData: userData,
+
+      // SAVE SESSION
+      await SessionService.saveSession(
         token: token,
-      ));
+        userData: userData,
+      );
+
+      emit(
+        AuthSuccess(
+          message: 'Login successful',
+          userData: userData,
+          token: token,
+        ),
+      );
     } catch (e) {
       emit(AuthFailure(error: e.toString()));
     }
@@ -71,11 +81,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Handle logout request event
   Future<void> _onLogoutRequested(
-    LogoutRequested event,
-    Emitter<AuthState> emit,
-  ) async {
+      LogoutRequested event,
+      Emitter<AuthState> emit,
+      ) async {
     try {
       await _authRepository.logout();
+
+      // CLEAR SESSION
+      await SessionService.clearSession();
+
       emit(const AuthLoggedOut());
     } catch (e) {
       emit(AuthFailure(error: e.toString()));
@@ -84,11 +98,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Handle auth status check event
   Future<void> _onAuthStatusChanged(
-    AuthStatusChanged event,
-    Emitter<AuthState> emit,
-  ) async {
-    // Check if user is already logged in
-    // This can be extended to check saved tokens, user session, etc.
-    emit(const AuthUnauthenticated());
+      AuthStatusChanged event,
+      Emitter<AuthState> emit,
+      ) async {
+
+    try {
+      final isLoggedIn = await SessionService.isLoggedIn();
+
+      if (isLoggedIn) {
+        final userData = await SessionService.getUserData();
+        final token = await SessionService.getToken();
+
+        emit(
+          AuthSuccess(
+            message: 'Session restored',
+            userData: userData ?? {},
+            token: token ?? '',
+          ),
+        );
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+    } catch (e) {
+      emit(AuthFailure(error: e.toString()));
+    }
   }
 }
