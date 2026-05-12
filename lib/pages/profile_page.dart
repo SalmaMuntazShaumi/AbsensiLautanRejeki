@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_event.dart';
 import 'package:lautanrejeki/repositories/users_repository.dart';
@@ -15,6 +18,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final UsersRepository _usersRepository = UsersRepository();
+  File? selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   bool isLoading = true;
 
@@ -24,10 +29,25 @@ class _ProfilePageState extends State<ProfilePage> {
   String phone = '';
   String birthdate = '';
 
+  String photoUrl = '';
+
   @override
   void initState() {
     super.initState();
     fetchProfile();
+  }
+
+  Future<void> pickImage() async {
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        selectedImage = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> fetchProfile() async {
@@ -46,6 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
         role = data['role'] ?? '';
         phone = data['phone'] ?? '';
         birthdate = data['birthdate'] ?? '';
+        photoUrl = data['photo_url'] ?? '';
         isLoading = false;
       });
     } catch (e) {
@@ -102,20 +123,52 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: AppColors.primaryColor.withOpacity(
-                            0.15,
-                          ),
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 55,
 
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              backgroundImage:
+                              selectedImage != null
+                                  ? FileImage(selectedImage!)
+                                  : photoUrl.isNotEmpty
+                                  ? NetworkImage(photoUrl)
+                                  : null,
 
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
+                              child:
+                              selectedImage == null && photoUrl.isEmpty
+                                  ? Text(
+                                name.isNotEmpty
+                                    ? name[0].toUpperCase()
+                                    : '?',
+                              )
+                                  : null,
                             ),
-                          ),
+
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+
+                              child: GestureDetector(
+                                onTap: pickImage,
+
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor,
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -173,6 +226,34 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
 
                         const SizedBox(height: 32),
+
+                        SizedBox(
+                          width: double.infinity,
+
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+
+                            onPressed: () {
+                              showEditProfileDialog();
+                            },
+
+                            icon: const Icon(Icons.edit),
+
+                            label: const Text(
+                              'Edit Profile',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
 
                         SizedBox(
                           width: double.infinity,
@@ -278,6 +359,106 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> showEditProfileDialog() async {
+    final nameController = TextEditingController(text: name);
+    final phoneController = TextEditingController(text: phone);
+    final birthdateController = TextEditingController(text: birthdate);
+
+    showDialog(
+      context: context,
+
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+
+          title: const Text('Edit Profile'),
+
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: birthdateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Birthdate',
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+
+              child: const Text('Cancel'),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final token = await SessionService.getToken();
+
+                  if (token == null) return;
+
+                  await _usersRepository.updateProfile(
+                    token: token,
+                    name: nameController.text,
+                    phone: phoneController.text,
+                    birthdate: birthdateController.text,
+                    image: selectedImage,
+                  );
+
+                  setState(() {
+                    name = nameController.text;
+                    phone = phoneController.text;
+                    birthdate = birthdateController.text;
+                  });
+
+                  if (!context.mounted) return;
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Profile updated successfully'),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint(e.toString());
+                }
+              },
+
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
