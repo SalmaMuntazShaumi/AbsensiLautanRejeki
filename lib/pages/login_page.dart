@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
               // Navigate to home page with token
               Navigator.pushReplacementNamed(
                 context, 
-                '/home', 
+                '/main',
                 arguments: state.token ?? '',
               );
             } else if (state is AuthFailure) {

@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
       listener: (context, state) {
 
         if (state is AuthSuccess) {
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/main');
         }
 
         if (state is AuthUnauthenticated) {
