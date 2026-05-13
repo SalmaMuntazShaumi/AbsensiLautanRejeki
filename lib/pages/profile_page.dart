@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_event.dart';
+import 'package:lautanrejeki/pages/edit_profile_page.dart';
 import 'package:lautanrejeki/repositories/users_repository.dart';
 import 'package:lautanrejeki/services/session_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
@@ -123,52 +124,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     child: Column(
                       children: [
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 55,
+                        CircleAvatar(
+                          radius: 55,
 
-                              backgroundImage:
-                              selectedImage != null
-                                  ? FileImage(selectedImage!)
-                                  : photoUrl.isNotEmpty
-                                  ? NetworkImage(photoUrl)
-                                  : null,
+                          backgroundImage:
+                          selectedImage != null
+                              ? FileImage(selectedImage!)
+                              : photoUrl.isNotEmpty
+                              ? NetworkImage(photoUrl)
+                              : null,
 
-                              child:
-                              selectedImage == null && photoUrl.isEmpty
-                                  ? Text(
-                                name.isNotEmpty
-                                    ? name[0].toUpperCase()
-                                    : '?',
-                              )
-                                  : null,
-                            ),
-
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-
-                              child: GestureDetector(
-                                onTap: pickImage,
-
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryColor,
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          child:
+                          selectedImage == null && photoUrl.isEmpty
+                              ? Text(
+                            name.isNotEmpty
+                                ? name[0].toUpperCase()
+                                : '?',
+                          )
+                              : null,
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -189,14 +162,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
 
                           decoration: BoxDecoration(
-                            color: AppColors.primaryColor.withOpacity(0.1),
+                            color: AppColors.secondaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(50),
                           ),
 
                           child: Text(
                             role,
                             style: const TextStyle(
-                              color: AppColors.primaryColor,
+                              color: AppColors.secondaryColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -232,7 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryColor,
+                              backgroundColor: AppColors.secondaryColor,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -240,8 +213,22 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
 
-                            onPressed: () {
-                              showEditProfileDialog();
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => EditProfilePage(
+                                    name: name,
+                                    phone: phone,
+                                    birthdate: birthdate,
+                                    photoUrl: photoUrl,
+                                  ),
+                                ),
+                              );
+
+                              if (result == true) {
+                                fetchProfile();
+                              }
                             },
 
                             icon: const Icon(Icons.edit),
@@ -326,11 +313,11 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.all(12),
 
             decoration: BoxDecoration(
-              color: AppColors.primaryColor.withOpacity(0.1),
+              color: AppColors.secondaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(14),
             ),
 
-            child: Icon(icon, color: AppColors.primaryColor),
+            child: Icon(icon, color: AppColors.secondaryColor),
           ),
 
           const SizedBox(width: 16),
@@ -359,106 +346,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> showEditProfileDialog() async {
-    final nameController = TextEditingController(text: name);
-    final phoneController = TextEditingController(text: phone);
-    final birthdateController = TextEditingController(text: birthdate);
-
-    showDialog(
-      context: context,
-
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-
-          title: const Text('Edit Profile'),
-
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: birthdateController,
-                  decoration: const InputDecoration(
-                    labelText: 'Birthdate',
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
-              child: const Text('Cancel'),
-            ),
-
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  final token = await SessionService.getToken();
-
-                  if (token == null) return;
-
-                  await _usersRepository.updateProfile(
-                    token: token,
-                    name: nameController.text,
-                    phone: phoneController.text,
-                    birthdate: birthdateController.text,
-                    image: selectedImage,
-                  );
-
-                  setState(() {
-                    name = nameController.text;
-                    phone = phoneController.text;
-                    birthdate = birthdateController.text;
-                  });
-
-                  if (!context.mounted) return;
-
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile updated successfully'),
-                    ),
-                  );
-                } catch (e) {
-                  debugPrint(e.toString());
-                }
-              },
-
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
