@@ -18,11 +18,55 @@ class _HistoryPageState extends State<HistoryPage> {
 
   bool isLoading = true;
   List<AttendanceHistoryModel> histories = [];
+  DateTime selectedMonth = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     fetchHistory(); // async-safe
+  }
+
+  List<AttendanceHistoryModel> get filteredHistories {
+    return histories.where((history) {
+      if (history.date == null) return false;
+
+      final date = DateTime.tryParse(history.date!);
+
+      if (date == null) return false;
+
+      return date.month == selectedMonth.month &&
+          date.year == selectedMonth.year;
+    }).toList();
+  }
+
+  Future<void> selectMonth() async {
+    final picked = await showDatePicker(
+      context: context,
+
+      initialDate: selectedMonth,
+
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+
+      initialDatePickerMode: DatePickerMode.year,
+
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedMonth = picked;
+      });
+    }
   }
 
   Future<void> fetchHistory() async {
@@ -53,10 +97,7 @@ class _HistoryPageState extends State<HistoryPage> {
     try {
       final dateTime = DateTime.parse(date);
 
-      final result = DateFormat(
-        'EEEE, dd MMMM yyyy',
-        'id_ID',
-      ).format(dateTime);
+      final result = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(dateTime);
 
       debugPrint('FORMATTED DATE: $result');
 
@@ -85,68 +126,137 @@ class _HistoryPageState extends State<HistoryPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : histories.isEmpty
-          ? const Center(child: Text('No attendance history'))
-          : ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: histories.length,
-        itemBuilder: (context, index) {
-          final history = histories[index];
-
-          debugPrint('DATE FROM API: ${history.date}');
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          : Column(
               children: [
-                Text(
-                  formattedDate(history.date),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textColor,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: GestureDetector(
+                    onTap: selectMonth,
+
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_month,
+                                color: AppColors.primaryColor,
+                              ),
+
+                              const SizedBox(width: 12),
+
+                              Text(
+                                DateFormat(
+                                  'MMMM yyyy',
+                                  'id_ID',
+                                ).format(selectedMonth),
+
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const Icon(Icons.keyboard_arrow_down),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTimeCard(
-                        title: 'Clock In',
-                        value: history.clockIn ?? '-',
-                        icon: Icons.login,
-                        color: Colors.green,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTimeCard(
-                        title: 'Clock Out',
-                        value: history.clockOut ?? '-',
-                        icon: Icons.logout,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
+
+                Expanded(
+                  child: filteredHistories.isEmpty
+                      ? const Center(child: Text('Tidak ada riwayat absensi'))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          itemCount: filteredHistories.length,
+                          itemBuilder: (context, index) {
+                            final history = filteredHistories[index];
+
+                            debugPrint('DATE FROM API: ${history.date}');
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    formattedDate(history.date),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textColor,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildTimeCard(
+                                          title: 'Clock In',
+                                          value: history.clockIn ?? '-',
+                                          icon: Icons.login,
+                                          color: Colors.green,
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 12),
+
+                                      Expanded(
+                                        child: _buildTimeCard(
+                                          title: 'Clock Out',
+                                          value: history.clockOut ?? '-',
+                                          icon: Icons.logout,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
-          );
-        },
-      ),
     );
   }
 
