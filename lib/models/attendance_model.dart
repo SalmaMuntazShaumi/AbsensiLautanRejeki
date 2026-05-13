@@ -1,6 +1,6 @@
 class AttendanceModel {
-  final String? checkOutPhoto;
-  final String? checkInPhoto;
+  final String? clockOutPhoto;
+  final String? clockInPhoto;
   final String? clockIn;
   final String? clockOut;
   final String? status;
@@ -10,8 +10,8 @@ class AttendanceModel {
     this.clockIn,
     this.clockOut,
     this.status,
-    this.checkInPhoto,
-    this.checkOutPhoto,
+    this.clockInPhoto,
+    this.clockOutPhoto,
     this.earlyOutReason,
   });
 
@@ -20,11 +20,11 @@ class AttendanceModel {
       ) {
 
     return AttendanceModel(
-      clockIn: json['check_in'],
-      clockOut: json['check_out'],
+      clockIn: json['clock_in'],
+      clockOut: json['clock_out'],
       status: json['status'],
-      checkInPhoto: json['check_in_photo'],
-      checkOutPhoto: json['check_out_photo'],
+      clockInPhoto: json['clock_in_photo'],
+      clockOutPhoto: json['clock_out_photo'],
       earlyOutReason: json['early_out_reason'],
     );
   }
@@ -32,11 +32,11 @@ class AttendanceModel {
   Map<String, dynamic> toJson() {
 
     return {
-      'check_in': clockIn,
-      'check_out': clockOut,
+      'clock_in': clockIn,
+      'clock_out': clockOut,
       'status': status,
-      'check_in_photo': checkInPhoto,
-      'check_out_photo': checkOutPhoto,
+      'clock_in_photo': clockInPhoto,
+      'clock_out_photo': clockOutPhoto,
       'early_out_reason': earlyOutReason,
     };
   }
@@ -45,8 +45,8 @@ class AttendanceModel {
     String? clockIn,
     String? clockOut,
     String? status,
-    String? checkInPhoto,
-    String? checkOutPhoto,
+    String? clockInPhoto,
+    String? clockOutPhoto,
     String? earlyOutReason,
   }) {
 
@@ -54,8 +54,8 @@ class AttendanceModel {
       clockIn: clockIn ?? this.clockIn,
       clockOut: clockOut ?? this.clockOut,
       status: status ?? this.status,
-      checkInPhoto: checkInPhoto ?? this.checkInPhoto,
-      checkOutPhoto: checkOutPhoto ?? this.checkOutPhoto,
+      clockInPhoto: clockInPhoto ?? this.clockInPhoto,
+      clockOutPhoto: clockOutPhoto ?? this.clockOutPhoto,
       earlyOutReason:
       earlyOutReason ?? this.earlyOutReason,
     );

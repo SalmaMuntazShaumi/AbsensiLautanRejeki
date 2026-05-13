@@ -98,15 +98,19 @@ class AttendanceBloc
     try {
 
       final response =
-      await repository.checkIn(
+      await repository.clockIn(
+
         token: event.token,
         photo: event.photo,
+
       );
 
       attendance = attendance.copyWith(
+
         clockIn: response.clockIn,
         status: response.status,
-        checkInPhoto: response.checkInPhoto,
+        clockInPhoto: response.clockInPhoto,
+
       );
 
       emit(
@@ -170,9 +174,8 @@ class AttendanceBloc
     emit(AttendanceLoading());
 
     try {
-      await repository.checkOut(
+      await repository.clockOut(
         token: event.token,
-        photo: event.photo,
         reason: event.reason,
       );
 
@@ -181,7 +184,6 @@ class AttendanceBloc
 
       attendance = attendance.copyWith(
         clockOut: now,
-        checkOutPhoto: event.photo,
         earlyOutReason: event.reason,
       );
 

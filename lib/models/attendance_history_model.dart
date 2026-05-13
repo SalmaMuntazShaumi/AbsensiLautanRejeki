@@ -62,7 +62,8 @@ class AttendanceHistoryModel {
 
       'clock_out': clockOut,
 
-      'early_out_reason': earlyOutReason,
+      'early_out_reason':
+      earlyOutReason,
     };
   }
 }

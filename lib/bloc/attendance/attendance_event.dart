@@ -1,3 +1,5 @@
+import 'dart:io';
+
 abstract class AttendanceEvent {}
 
 class VerifyLocationRequested
@@ -7,7 +9,7 @@ class ClockInRequested
     extends AttendanceEvent {
 
   final String token;
-  final String photo;
+  final File photo;
 
   ClockInRequested({
     required this.token,
@@ -19,12 +21,10 @@ class ClockOutRequested
     extends AttendanceEvent {
 
   final String token;
-  final String photo;
   final String? reason;
 
   ClockOutRequested({
     required this.token,
-    required this.photo,
     this.reason,
   }); 
 }

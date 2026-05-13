@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:lautanrejeki/services/camera_service.dart';
@@ -97,33 +99,41 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _takePicture() async {
+
     if (_isCapturing || _controller == null) return;
 
     try {
+
       setState(() {
         _isCapturing = true;
       });
 
-      final XFile picture = await _controller!.takePicture();
+      final XFile picture =
+      await _controller!.takePicture();
 
-      final base64Image =
-      await CameraService.convertImageToBase64(picture.path);
+      final imageFile = File(picture.path);
 
       if (mounted) {
+
         Navigator.pop(
           context,
           {
-            'photo': base64Image,
+            'photo': imageFile,
             'clockType': widget.clockType,
             'token': widget.token,
             'reason': widget.earlyOutReason,
           },
         );
       }
+
     } catch (e) {
+
       if (mounted) {
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: $e')),
+          SnackBar(
+            content: Text('Camera error: $e'),
+          ),
         );
 
         setState(() {

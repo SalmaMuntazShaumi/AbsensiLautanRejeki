@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lautanrejeki/bloc/attendance/attendance_bloc.dart';
@@ -120,7 +121,43 @@ class _HomePageState extends State<HomePage> {
                 color: AppColors.textColor,
               ),
             ),
-            CustomAbsentCard(token: token)          ],
+            CustomAbsentCard(token: token),
+            GestureDetector(
+              onTap: (){
+                 Navigator.pushNamed(context, '/timeoff');
+              },
+              child: Container(
+                margin: const EdgeInsets.only(top: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amberAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment:.center,
+                  children: const [
+                    Icon(
+                      CupertinoIcons.bag_fill_badge_minus,
+                      size: 16,
+                      color: Colors.amber,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pengajuan Time Off/Izin',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );

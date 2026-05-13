@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:lautanrejeki/models/attendance_history_model.dart';
@@ -52,29 +53,38 @@ class AttendanceRepository {
   }
 
   // =========================
-  // CHECK IN
+  // CLOCK IN
   // =========================
-  Future<AttendanceModel> checkIn({
+  Future<AttendanceModel> clockIn({
 
     required String token,
-    required String photo,
+    required File photo,
 
   }) async {
 
     try {
 
+      final formData = FormData.fromMap({
+
+        'photo': await MultipartFile.fromFile(
+          photo.path,
+          filename: 'clockin.jpg',
+        ),
+
+      });
+
       final response = await dio.post(
 
-        '/api/check-in',
+        '/api/clock-in',
 
-        data: {
-          'photo': photo,
-        },
+        data: formData,
 
         options: Options(
           headers: {
+
             'Authorization': 'Bearer $token',
             'Accept': 'application/json',
+
           },
         ),
       );
@@ -86,18 +96,17 @@ class AttendanceRepository {
     } catch (e) {
 
       throw Exception(
-        'Check in failed: $e',
+        'Clock in failed: $e',
       );
     }
   }
 
   // =========================
-  // CHECK OUT
+  // CLOCK OUT
   // =========================
-  Future<AttendanceModel> checkOut({
+  Future<AttendanceModel> clockOut({
 
     required String token,
-    required String photo,
     String? reason,
 
   }) async {
@@ -106,10 +115,9 @@ class AttendanceRepository {
 
       final response = await dio.post(
 
-        '/api/check-out',
+        '/api/clock-out',
 
         data: {
-          'photo': photo,
           'early_out_reason': reason,
         },
 
@@ -128,7 +136,7 @@ class AttendanceRepository {
     } catch (e) {
 
       throw Exception(
-        'Check out failed: $e',
+        'Clock out failed: $e',
       );
     }
   }
@@ -155,7 +163,7 @@ class AttendanceRepository {
       );
 
       final List data =
-      response.data['data'];
+      response.data;
 
       print(response.data);
 

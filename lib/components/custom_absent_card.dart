@@ -361,7 +361,6 @@ class CustomAbsentCard extends StatelessWidget {
 
         ClockOutRequested(
           token: token,
-          photo: '', // ga perlu foto
         ),
       );
     }
@@ -497,7 +496,6 @@ class CustomAbsentCard extends StatelessWidget {
               context.read<AttendanceBloc>().add(
                 ClockOutRequested(
                   token: token,
-                  photo: '',
                   reason: reasonController.text,
                 ),
               );
@@ -579,7 +577,6 @@ class CustomAbsentCard extends StatelessWidget {
 
           ClockOutRequested(
             token: result['token'],
-            photo: result['photo'],
             reason: result['reason'],
           ),
         );
