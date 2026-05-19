@@ -274,7 +274,7 @@ class CustomHistoryCard extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
 
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.05),
+                  color: AppColors.secondaryColor.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
 
@@ -288,7 +288,7 @@ class CustomHistoryCard extends StatelessWidget {
                       'Alasan Pulang Cepat',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.red,
+                        color: AppColors.secondaryColor,
                       ),
                     ),
 

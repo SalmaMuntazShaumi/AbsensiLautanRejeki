@@ -75,7 +75,7 @@ class AttendanceRepository {
 
       final response = await dio.post(
 
-        '/api/clock-in',
+        'api/clock-in',
 
         data: formData,
 
@@ -115,7 +115,7 @@ class AttendanceRepository {
 
       final response = await dio.post(
 
-        '/api/clock-out',
+        'api/clock-out',
 
         data: {
           'early_out_reason': reason,
@@ -150,7 +150,7 @@ class AttendanceRepository {
 
       final response = await dio.get(
 
-        '/api/history',
+        'api/history',
 
         options: Options(
           headers: {
@@ -163,7 +163,7 @@ class AttendanceRepository {
       );
 
       final List data =
-      response.data;
+      response.data['data'];
 
       print(response.data);
 

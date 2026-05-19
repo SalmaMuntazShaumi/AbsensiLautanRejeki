@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -85,10 +86,12 @@ class _HistoryPageState extends State<HistoryPage> {
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      debugPrint(e.toString());
+      setState(() => isLoading = false);
+      debugPrint('FETCH ERROR: $e');  // Lihat pesan error lengkapnya
+      if (e is DioException) {
+        debugPrint('RESPONSE: ${e.response?.data}');
+        debugPrint('STATUS: ${e.response?.statusCode}');
+      }
     }
   }
 
