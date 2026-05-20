@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Config
+  Mengizinkan HTTP cleartext ke semua domain (untuk dev/LAN).
+  Untuk produksi dengan domain publik HTTPS, hapus <base-config> dan
+  tambahkan hanya domain HTTP lokal jika diperlukan.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

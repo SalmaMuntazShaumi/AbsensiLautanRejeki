@@ -45,6 +45,30 @@
 
   }
 
+  /// Event untuk request OTP via nomor telepon
+  class RequestOtpRequested extends AuthEvent {
+    final String phoneNumber;
+
+    const RequestOtpRequested({required this.phoneNumber});
+
+    @override
+    List<Object> get props => [phoneNumber];
+  }
+
+  /// Event untuk verifikasi OTP
+  class VerifyOtpRequested extends AuthEvent {
+    final String phoneNumber;
+    final String otp;
+
+    const VerifyOtpRequested({
+      required this.phoneNumber,
+      required this.otp,
+    });
+
+    @override
+    List<Object> get props => [phoneNumber, otp];
+  }
+
   /// Event for logout request
   class LogoutRequested extends AuthEvent {
     const LogoutRequested();
