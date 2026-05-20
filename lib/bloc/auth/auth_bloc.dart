@@ -12,7 +12,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         super(const AuthInitial()) {
     on<RequestOtpRequested>(_onRequestOtpRequested);
     on<VerifyOtpRequested>(_onVerifyOtpRequested);
-    on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<AuthStatusChanged>(_onAuthStatusChanged);
@@ -74,39 +73,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Handle login request event (untuk backward compatibility)
-  Future<dynamic> _onLoginRequested(
-      LoginRequested event,
-      Emitter<AuthState> emit,
-      ) async {
-    emit(const AuthLoading());
-
-    try {
-      final userData = await _authRepository.login(
-        email: event.email,
-        password: event.password,
-      );
-
-      final token = userData['token'];
-
-      // SAVE SESSION
-      await SessionService.saveSession(
-        token: token,
-        userData: userData,
-      );
-
-      emit(
-        AuthSuccess(
-          message: 'Login successful',
-          userData: userData,
-          token: token,
-        ),
-      );
-    } catch (e) {
-      emit(AuthFailure(error: e.toString()));
-    }
-  }
-
   Future<void> _onRegisterRequested(
       RegisterRequested event,
       Emitter<AuthState> emit,
@@ -115,8 +81,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final success = await _authRepository.register(
         name: event.name,
-        email: event.email,
-        password: event.password,
         role: event.role,
         phone: event.phone,
         birthDate: event.birthDate,

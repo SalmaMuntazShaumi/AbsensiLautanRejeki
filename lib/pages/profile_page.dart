@@ -63,7 +63,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       setState(() {
         name = data['name'] ?? '';
-        email = data['email'] ?? '';
         role = data['role'] ?? '';
         phone = data['phone'] ?? '';
         birthdate = data['birthdate'] ?? '';
@@ -175,14 +174,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  _buildProfileTile(
-                    icon: Icons.email_outlined,
-                    title: 'Email',
-                    value: email,
-                  ),
-
-                  const SizedBox(height: 16),
 
                   _buildProfileTile(
                     icon: Icons.phone_outlined,

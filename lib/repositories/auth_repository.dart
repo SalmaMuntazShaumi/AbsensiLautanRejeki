@@ -216,8 +216,6 @@ class AuthRepository {
   /// Register user
   Future<bool> register({
     required String name,
-    required String email,
-    required String password,
     required String role,
     required String phone,
     required String birthDate,
@@ -226,8 +224,6 @@ class AuthRepository {
       final apiUrl = await _baseUrl();
       final body = const JsonEncoder().convert({
         'name': name,
-        'email': email,
-        'password': password,
         'role': role,
         'phone': phone,
         'birthdate': birthDate,

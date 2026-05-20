@@ -18,8 +18,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _bdController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
   String? selectedRole = null;
 
@@ -28,8 +26,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _bdController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -113,6 +109,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           child: const Text('Supervisor'),
                           value: 'Supervisor',
                         ),
+                        DropdownMenuItem(
+                          child: const Text('Admin'),
+                          value: 'Admin',
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -168,17 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                controller: _emailController,
-                labelText: 'Email',
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-              ),
-              const SizedBox(height: 36),
+              SizedBox(height: 36),
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
                   return SizedBox(
@@ -206,15 +196,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           ? null
                           : () {
                               final name = _nameController.text;
-                              final email = _emailController.text;
-                              final password = _passwordController.text;
                               final role = selectedRole;
                               final phone = _phoneController.text;
                               final bd = _bdController.text;
 
                               if (name.isEmpty ||
-                                  email.isEmpty ||
-                                  password.isEmpty ||
                                   phone.isEmpty ||
                                   bd.isEmpty ||
                                   role == null) {
@@ -230,8 +216,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               context.read<AuthBloc>().add(
                                     RegisterRequested(
                                       name: name,
-                                      email: email,
-                                      password: password,
                                       role: role,
                                       phone: phone,
                                       birthDate: bd,

@@ -36,7 +36,9 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.pushNamed(
                 context,
                 '/otp',
-                arguments: state.phoneNumber,
+                arguments: {
+                  'phone': state.phoneNumber,
+                },
               );
             } else if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
