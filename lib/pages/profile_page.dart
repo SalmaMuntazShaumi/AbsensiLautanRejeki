@@ -101,188 +101,214 @@ class _ProfilePageState extends State<ProfilePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
+
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              width: double.infinity,
+
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
 
               child: Column(
                 children: [
+                  CircleAvatar(
+                    radius: 55,
+
+                    backgroundImage:
+                    selectedImage != null
+                        ? FileImage(selectedImage!)
+                        : photoUrl.isNotEmpty
+                        ? NetworkImage(photoUrl)
+                        : null,
+
+                    child:
+                    selectedImage == null && photoUrl.isEmpty
+                        ? Text(
+                      name.isNotEmpty
+                          ? name[0].toUpperCase()
+                          : '?',
+                    )
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textColor,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
                   Container(
-                    padding: const EdgeInsets.all(24),
-                    width: double.infinity,
-
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
                     ),
 
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 55,
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(50),
+                    ),
 
-                          backgroundImage:
-                          selectedImage != null
-                              ? FileImage(selectedImage!)
-                              : photoUrl.isNotEmpty
-                              ? NetworkImage(photoUrl)
-                              : null,
+                    child: Text(
+                      role,
+                      style: const TextStyle(
+                        color: AppColors.secondaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-                          child:
-                          selectedImage == null && photoUrl.isEmpty
-                              ? Text(
-                            name.isNotEmpty
-                                ? name[0].toUpperCase()
-                                : '?',
-                          )
-                              : null,
+                  _buildProfileTile(
+                    icon: Icons.email_outlined,
+                    title: 'Email',
+                    value: email,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildProfileTile(
+                    icon: Icons.phone_outlined,
+                    title: 'Phone Number',
+                    value: phone,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildProfileTile(
+                    icon: Icons.calendar_month_outlined,
+                    title: 'Birthdate',
+                    value: birthdate,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(height: 20),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textColor,
-                          ),
-                        ),
+                      ),
 
-                        const SizedBox(height: 8),
-
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-
-                          decoration: BoxDecoration(
-                            color: AppColors.secondaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-
-                          child: Text(
-                            role,
-                            style: const TextStyle(
-                              color: AppColors.secondaryColor,
-                              fontWeight: FontWeight.w600,
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditProfilePage(
+                              name: name,
+                              phone: phone,
+                              birthdate: birthdate,
+                              photoUrl: photoUrl,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
+                        );
 
-                        _buildProfileTile(
-                          icon: Icons.email_outlined,
-                          title: 'Email',
-                          value: email,
-                        ),
+                        if (result == true) {
+                          fetchProfile();
+                        }
+                      },
 
-                        const SizedBox(height: 16),
+                      icon: const Icon(Icons.edit),
 
-                        _buildProfileTile(
-                          icon: Icons.phone_outlined,
-                          title: 'Phone Number',
-                          value: phone,
-                        ),
+                      label: const Text(
+                        'Edit Profile',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
 
-                        const SizedBox(height: 16),
-
-                        _buildProfileTile(
-                          icon: Icons.calendar_month_outlined,
-                          title: 'Birthdate',
-                          value: birthdate,
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        SizedBox(
-                          width: double.infinity,
-
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => EditProfilePage(
-                                    name: name,
-                                    phone: phone,
-                                    birthdate: birthdate,
-                                    photoUrl: photoUrl,
-                                  ),
-                                ),
-                              );
-
-                              if (result == true) {
-                                fetchProfile();
-                              }
-                            },
-
-                            icon: const Icon(Icons.edit),
-
-                            label: const Text(
-                              'Edit Profile',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                  // Tombol Admin Settings — hanya tampil untuk role admin
+                  if (role.toLowerCase() == 'admin') ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade700,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-
-                        const SizedBox(height: 20),
-
-                        SizedBox(
-                          width: double.infinity,
-
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-
-                            onPressed: () async {
-                              await SessionService.clearSession();
-
-                              if (!context.mounted) return;
-
-                              context.read<AuthBloc>().add(LogoutRequested());
-
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/login',
-                                (route) => false,
-                              );
-                            },
-
-                            icon: const Icon(Icons.logout),
-
-                            label: const Text(
-                              'Logout',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/admin_settings');
+                        },
+                        icon: const Icon(Icons.settings),
+                        label: const Text(
+                          'Pengaturan Admin',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+
+                      onPressed: () async {
+                        await SessionService.clearSession();
+
+                        if (!context.mounted) return;
+
+                        context.read<AuthBloc>().add(LogoutRequested());
+
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/login',
+                              (route) => false,
+                        );
+                      },
+
+                      icon: const Icon(Icons.logout),
+
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
     );
   }
 

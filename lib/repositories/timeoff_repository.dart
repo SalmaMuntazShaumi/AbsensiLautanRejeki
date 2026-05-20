@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:lautanrejeki/config/app_config.dart';
 
 class TimeOffRepository {
-  final String apiUrl = 'http://192.168.0.31:8000/';
+
+  Future<String> _baseUrl() => AppConfig.getBaseUrl();
 
   Future<void> createTimeOff({
     required String token,
@@ -14,14 +16,13 @@ class TimeOffRepository {
     required String reason,
   }) async {
     try {
+      final apiUrl = await _baseUrl();
       final response = await http.post(
-        Uri.parse('${apiUrl}api/time-off'),
-
+        Uri.parse('$apiUrl/api/time-off'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-
         body: {
           'type': type,
           'start_date': startDate,
@@ -33,34 +34,25 @@ class TimeOffRepository {
       final data = jsonDecode(response.body);
 
       if (response.statusCode != 201) {
-        throw Exception(
-          data['message'] ??
-              'Failed to submit time off',
-        );
+        throw Exception(data['message'] ?? 'Failed to submit time off');
       }
     } on SocketException {
       throw Exception('Network error');
     } catch (e) {
-      throw Exception(
-        'Submit time off error: $e',
-      );
+      throw Exception('Submit time off error: $e');
     }
   }
 
-  Future<List<dynamic>> getTimeOff({
-    required String token,
-  }) async {
+  Future<List<dynamic>> getTimeOff({required String token}) async {
+    final apiUrl = await _baseUrl();
     final response = await http.get(
-      Uri.parse('${apiUrl}api/time-off'),
-
+      Uri.parse('$apiUrl/api/time-off'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       },
     );
 
-    final data = jsonDecode(response.body);
-
-    return data;
+    return jsonDecode(response.body);
   }
 }

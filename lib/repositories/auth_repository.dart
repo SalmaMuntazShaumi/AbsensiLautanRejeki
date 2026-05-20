@@ -1,26 +1,25 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:lautanrejeki/config/app_config.dart';
 
 class AuthRepository {
-  final String apiUrl = 'http://192.168.0.31:8000/';
+  Future<String> _baseUrl() => AppConfig.getBaseUrl();
 
-  /// Login user with email and password
-  Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
+  /// Request OTP via WhatsApp
+  Future<Map<String, dynamic>> requestOtp({
+    required String phoneNumber,
   }) async {
     try {
-      final JsonEncoder encoder = const JsonEncoder();
-      final body = encoder.convert({
-        'email': email,
-        'password': password,
+      final apiUrl = await _baseUrl();
+      final body = const JsonEncoder().convert({
+        'phone': phoneNumber,
       });
 
-      print('Sending login request to ${apiUrl}api/login with body: $body');
+      print('Sending OTP request to $apiUrl/api/auth/request-otp');
 
       final response = await http.post(
-        Uri.parse('${apiUrl}api/login'),
+        Uri.parse('$apiUrl/api/auth/request-otp'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -28,16 +27,138 @@ class AuthRepository {
         body: body,
       ).timeout(
         const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Login request timeout');
+        onTimeout: () => throw Exception('OTP request timeout'),
+      );
+
+      print('OTP response status: ${response.statusCode}');
+      print('OTP response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final data = jsonDecode(response.body);
+          if (data is Map<String, dynamic>) {
+            return data;
+          } else {
+            throw Exception('Invalid response format');
+          }
+        } catch (e) {
+          throw Exception('Error parsing OTP response: $e');
+        }
+      } else {
+        try {
+          final data = jsonDecode(response.body);
+          String message = 'Failed to send OTP';
+
+          if (data is Map<String, dynamic>) {
+            if (data['message'] != null && data['message'] is String) {
+              message = data['message'] as String;
+            }
+          }
+
+          throw Exception(message);
+        } catch (e) {
+          throw Exception('OTP request failed: $e');
+        }
+      }
+    } on SocketException {
+      throw Exception('Network error: Unable to connect to server');
+    } catch (e) {
+      throw Exception('OTP request failed: $e');
+    }
+  }
+
+  /// Verify OTP and login
+  Future<Map<String, dynamic>> verifyOtp({
+    required String phoneNumber,
+    required String otp,
+  }) async {
+    try {
+      final apiUrl = await _baseUrl();
+      final body = const JsonEncoder().convert({
+        'phone': phoneNumber,
+        'otp': otp,
+      });
+
+      print('Sending OTP verification to $apiUrl/api/auth/verify-otp');
+
+      final response = await http.post(
+        Uri.parse('$apiUrl/api/auth/verify-otp'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        body: body,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Verification request timeout'),
+      );
+
+      print('Verification response status: ${response.statusCode}');
+      print('Verification response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final data = jsonDecode(response.body);
+          if (data is Map<String, dynamic>) {
+            return data;
+          } else {
+            throw Exception('Invalid response format');
+          }
+        } catch (e) {
+          throw Exception('Error parsing verification response: $e');
+        }
+      } else if (response.statusCode == 401 || response.statusCode == 400) {
+        try {
+          final data = jsonDecode(response.body);
+          String message = 'Invalid OTP';
+
+          if (data is Map<String, dynamic>) {
+            if (data['message'] != null && data['message'] is String) {
+              message = data['message'] as String;
+            }
+          }
+
+          throw Exception(message);
+        } catch (e) {
+          throw Exception('Verification failed: $e');
+        }
+      } else {
+        throw Exception('Verification failed with status code: ${response.statusCode}');
+      }
+    } on SocketException {
+      throw Exception('Network error: Unable to connect to server');
+    } catch (e) {
+      throw Exception('Verification failed: $e');
+    }
+  }
+
+  /// Login user with email and password (tetap ada untuk backward compatibility)
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final apiUrl = await _baseUrl();
+      final body = const JsonEncoder().convert({'email': email, 'password': password});
+
+      print('Sending login request to $apiUrl/api/login');
+
+      final response = await http.post(
+        Uri.parse('$apiUrl/api/login'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: body,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Login request timeout'),
       );
 
       print('Login response status: ${response.statusCode}');
       print('Login response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Successfully logged in
         try {
           final data = jsonDecode(response.body);
           if (data is Map<String, dynamic>) {
@@ -51,9 +172,9 @@ class AuthRepository {
       } else if (response.statusCode == 401 || response.statusCode == 400) {
         try {
           final data = jsonDecode(response.body);
-          
+
           String message = 'Invalid email or password';
-          
+
           if (data is Map<String, dynamic>) {
             if (data['message'] != null && data['message'] is String) {
               message = data['message'] as String;
@@ -71,7 +192,7 @@ class AuthRepository {
               message = data['error'] as String;
             }
           }
-          
+
           throw Exception(message);
         } catch (parseError) {
           print('Error parsing login response: $parseError');
@@ -92,7 +213,7 @@ class AuthRepository {
     }
   }
 
-  /// Register user with email, password, and role
+  /// Register user
   Future<bool> register({
     required String name,
     required String email,
@@ -102,8 +223,8 @@ class AuthRepository {
     required String birthDate,
   }) async {
     try {
-      final JsonEncoder encoder = const JsonEncoder();
-      final body = encoder.convert({
+      final apiUrl = await _baseUrl();
+      final body = const JsonEncoder().convert({
         'name': name,
         'email': email,
         'password': password,
@@ -112,10 +233,10 @@ class AuthRepository {
         'birthdate': birthDate,
       });
 
-      print('Sending register request to ${apiUrl}api/register with body: $body');
+      print('Sending register request to $apiUrl/api/register');
 
       final response = await http.post(
-        Uri.parse('${apiUrl}api/register'),
+        Uri.parse('$apiUrl/api/register'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -123,16 +244,13 @@ class AuthRepository {
         body: body,
       ).timeout(
         const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Register request timeout');
-        },
+        onTimeout: () => throw Exception('Register request timeout'),
       );
 
       print('Register response status: ${response.statusCode}');
       print('Register response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Successfully registered
         return true;
       } else if (response.statusCode == 400 || response.statusCode == 422) {
         try {
@@ -164,7 +282,6 @@ class AuthRepository {
           throw Exception('Registration failed: Invalid server response');
         }
       } else if (response.statusCode == 409) {
-        // Conflict - user already exists
         throw Exception('User with this email already exists');
       } else {
         throw Exception('Registration failed with status code: ${response.statusCode}');
@@ -185,7 +302,6 @@ class AuthRepository {
   Future<void> logout() async {
     try {
       print('User logged out');
-      // Clear user session or token here
       await Future.delayed(const Duration(seconds: 1));
     } catch (e) {
       print('Logout error: $e');

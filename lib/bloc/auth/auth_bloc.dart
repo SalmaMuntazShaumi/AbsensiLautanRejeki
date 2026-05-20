@@ -4,21 +4,77 @@ import 'package:lautanrejeki/bloc/auth/auth_state.dart';
 import 'package:lautanrejeki/repositories/auth_repository.dart';
 import 'package:lautanrejeki/services/session_service.dart';
 
-/// AuthBloc handles all authentication-related events and emits appropriate states
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
   AuthBloc({required AuthRepository authRepository})
       : _authRepository = authRepository,
         super(const AuthInitial()) {
-    // Register event handlers
+    on<RequestOtpRequested>(_onRequestOtpRequested);
+    on<VerifyOtpRequested>(_onVerifyOtpRequested);
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<AuthStatusChanged>(_onAuthStatusChanged);
   }
 
-  /// Handle login request event
+  /// Handle request OTP event
+  Future<void> _onRequestOtpRequested(
+      RequestOtpRequested event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(const AuthLoading());
+
+    try {
+      final response = await _authRepository.requestOtp(
+        phoneNumber: event.phoneNumber,
+      );
+
+      emit(
+        OtpSent(
+          phoneNumber: event.phoneNumber,
+          message: response['message'] ?? 'OTP sent to WhatsApp',
+        ),
+      );
+    } catch (e) {
+      emit(AuthFailure(error: e.toString()));
+    }
+  }
+
+  /// Handle verify OTP event
+  Future<void> _onVerifyOtpRequested(
+      VerifyOtpRequested event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(const AuthLoading());
+
+    try {
+      final userData = await _authRepository.verifyOtp(
+        phoneNumber: event.phoneNumber,
+        otp: event.otp,
+      );
+
+      final token = userData['token'];
+
+      // SAVE SESSION
+      await SessionService.saveSession(
+        token: token,
+        userData: userData,
+      );
+
+      emit(
+        AuthSuccess(
+          message: 'Login successful',
+          userData: userData,
+          token: token,
+        ),
+      );
+    } catch (e) {
+      emit(AuthFailure(error: e.toString()));
+    }
+  }
+
+  /// Handle login request event (untuk backward compatibility)
   Future<dynamic> _onLoginRequested(
       LoginRequested event,
       Emitter<AuthState> emit,
@@ -67,7 +123,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (success) {
-        // GANTI DI SINI
         emit(const AuthRegisterSuccess(
           message: 'Registration successful. Please login.',
         ));
@@ -101,7 +156,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthStatusChanged event,
       Emitter<AuthState> emit,
       ) async {
-
     try {
       final isLoggedIn = await SessionService.isLoggedIn();
 

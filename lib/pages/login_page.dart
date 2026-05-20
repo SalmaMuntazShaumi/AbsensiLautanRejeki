@@ -16,13 +16,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -33,14 +31,21 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
-            if (state is AuthSuccess) {
+            if (state is OtpSent) {
+              // Navigate to OTP page
+              Navigator.pushNamed(
+                context,
+                '/otp',
+                arguments: state.phoneNumber,
+              );
+            } else if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
 
               // Navigate to home page with token
               Navigator.pushReplacementNamed(
-                context, 
+                context,
                 '/main',
                 arguments: state.token ?? '',
               );
@@ -81,34 +86,8 @@ class _LoginPageState extends State<LoginPage> {
               Image.asset('assets/login.png', height: 200),
               const SizedBox(height: 36),
               CustomTextField(
-                controller: _emailController,
-                labelText: 'Email',
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: RichText(
-                  text: TextSpan(
-                    text: 'Lupa password anda? ',
-                    style: const TextStyle(color: AppColors.textColor),
-                    children: [
-                      TextSpan(
-                        text: 'Klik disini',
-                        style: const TextStyle(
-                          color: AppColors.secondaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        recognizer: TapGestureRecognizer()..onTap = () {
-                          // Implement navigation to password recovery page
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                controller: _phoneController,
+                labelText: 'Nomor Telepon',
               ),
               const SizedBox(height: 20),
               BlocBuilder<AuthBloc, AuthState>(
@@ -120,7 +99,8 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: MaterialStateProperty.all(
                           AppColors.primaryColor,
                         ),
-                        foregroundColor: WidgetStatePropertyAll(Colors.white),
+                        foregroundColor:
+                        const WidgetStatePropertyAll(Colors.white),
                         padding: MaterialStateProperty.all(
                           const EdgeInsets.symmetric(
                             horizontal: 40,
@@ -136,32 +116,33 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: state is AuthLoading
                           ? null
                           : () {
-                        final email = _emailController.text;
-                        final password = _passwordController.text;
+                        final phone = _phoneController.text;
 
-                        if (email.isEmpty || password.isEmpty) {
+                        if (phone.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please fill in all fields')),
+                            const SnackBar(
+                                content: Text(
+                                    'Masukkan nomor telepon terlebih dahulu')),
                           );
                           return;
                         }
 
                         context.read<AuthBloc>().add(
-                          LoginRequested(email: email, password: password),
+                          RequestOtpRequested(phoneNumber: phone),
                         );
                       },
                       child: state is AuthLoading
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text('Masuk'),
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                          : const Text('Minta OTP'),
                     ),
                   );
                 },

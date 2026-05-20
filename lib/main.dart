@@ -4,9 +4,11 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/components/bottom_navbar.dart';
+import 'package:lautanrejeki/pages/admin_settings_page.dart';
 import 'package:lautanrejeki/pages/history_page.dart';
 import 'package:lautanrejeki/pages/login_page.dart';
 import 'package:lautanrejeki/pages/main_page.dart';
+import 'package:lautanrejeki/pages/otp_page.dart';
 import 'package:lautanrejeki/pages/profile_page.dart';
 import 'package:lautanrejeki/pages/register_page.dart';
 import 'package:lautanrejeki/pages/splash_screen.dart';
@@ -89,11 +91,26 @@ class MyApp extends StatelessWidget {
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfilePage());
 
-        case '/timeoff':
+      case '/timeoff':
         return MaterialPageRoute(builder: (_) => const TimeOffPage());
 
-        case '/timeoff_history':
+      case '/timeoff_history':
         return MaterialPageRoute(builder: (_) => const TimeOffHistoryPage());
+
+      case '/admin_settings':
+        return MaterialPageRoute(builder: (_) => const AdminSettingsPage());
+
+      case '/otp':
+        final args = settings.arguments as Map<String, dynamic>?;
+
+        if (args == null || !args.containsKey('phone')) {
+          return MaterialPageRoute(builder: (_) => const LoginPage());
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => OtpPage(phoneNumber: args['phone']),
+        );
+
 
       default:
         return MaterialPageRoute(builder: (_) => const LoginPage());

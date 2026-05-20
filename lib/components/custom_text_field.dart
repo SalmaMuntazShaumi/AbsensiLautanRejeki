@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatefulWidget {
   TextEditingController controller = new TextEditingController();
   String labelText;
+
+
   CustomTextField({super.key, required this.controller, required this.labelText});
 
   @override
@@ -16,8 +18,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      keyboardType: widget.labelText == 'Nomor Telepon' ? TextInputType.phone : TextInputType.text,
       controller: widget.controller,
-      obscureText: widget.labelText == 'Password' ? _obscureText : false,
       decoration: InputDecoration(
         labelText: widget.labelText,
         suffixIcon: widget.labelText == 'Password' ? IconButton(

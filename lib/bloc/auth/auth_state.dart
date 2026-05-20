@@ -18,6 +18,20 @@ class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
+/// State ketika OTP telah dikirim dan menunggu verifikasi
+class OtpSent extends AuthState {
+  final String phoneNumber;
+  final String message;
+
+  const OtpSent({
+    required this.phoneNumber,
+    required this.message,
+  });
+
+  @override
+  List<Object> get props => [phoneNumber, message];
+}
+
 /// State when authentication is successful
 class AuthSuccess extends AuthState {
   final String message;

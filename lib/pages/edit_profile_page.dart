@@ -157,12 +157,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget buildTextField({
     required String label,
     required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
     IconData? icon,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
 
       child: TextField(
+        keyboardType: keyboardType,
         controller: controller,
 
         decoration: InputDecoration(
@@ -279,6 +281,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               label: 'Phone Number',
               controller: phoneController,
               icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
             ),
 
             GestureDetector(
