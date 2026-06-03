@@ -3,14 +3,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'package:lautanrejeki/repositories/users_repository.dart';
 import 'package:lautanrejeki/services/session_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
+import 'package:lautanrejeki/models/user_model.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String name;
   final String phone;
+  final String email;
   final String birthdate;
   final String photoUrl;
 
@@ -18,6 +21,7 @@ class EditProfilePage extends StatefulWidget {
     super.key,
     required this.name,
     required this.phone,
+    required this.email,
     required this.birthdate,
     required this.photoUrl,
   });
@@ -33,6 +37,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   late TextEditingController nameController;
   late TextEditingController phoneController;
+  late TextEditingController emailController;
   late TextEditingController birthdateController;
 
   File? selectedImage;
@@ -51,6 +56,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       text: widget.phone,
     );
 
+    emailController = TextEditingController(
+      text: widget.email,
+    );
+
     birthdateController = TextEditingController(
       text: widget.birthdate,
     );
@@ -67,48 +76,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (pickedFile != null) {
       setState(() {
         selectedImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  Future<void> updateProfile() async {
-    try {
-      setState(() {
-        isLoading = true;
-      });
-
-      final token = await SessionService.getToken();
-
-      if (token == null) return;
-
-      await _usersRepository.updateProfile(
-        token: token,
-        name: nameController.text,
-        phone: phoneController.text,
-        birthdate: birthdateController.text,
-        image: selectedImage,
-      );
-
-      if (!mounted) return;
-
-      Navigator.pop(context, true);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-        ),
-      );
-    } catch (e) {
-      debugPrint(e.toString());
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
       });
     }
   }
@@ -194,6 +161,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
 
@@ -274,14 +242,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
             buildTextField(
               label: 'Name',
               controller: nameController,
-              icon: Icons.person_outline,
+              icon: CupertinoIcons.person,
             ),
 
             buildTextField(
               label: 'Phone Number',
               controller: phoneController,
-              icon: Icons.phone_outlined,
+              icon: CupertinoIcons.device_phone_portrait,
               keyboardType: TextInputType.phone,
+            ),
+
+            buildTextField(
+              label: 'Email',
+              controller: emailController,
+              icon: CupertinoIcons.envelope,
+              keyboardType: TextInputType.emailAddress,
             ),
 
             GestureDetector(
@@ -291,7 +266,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: buildTextField(
                   label: 'Birthdate',
                   controller: birthdateController,
-                  icon: Icons.calendar_month_outlined,
+                  icon: CupertinoIcons.calendar,
                 ),
               ),
             ),
@@ -303,11 +278,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
               height: 56,
 
               child: ElevatedButton(
-                onPressed:
-                isLoading
-                    ? null
-                    : updateProfile,
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                    final token = await SessionService.getToken();
+                    if (token == null) return;
 
+                    setState(() => isLoading = true);
+
+                    try {
+                      await _usersRepository.updateProfile(
+                        token: token,
+                        name: nameController.text,
+                        phone: phoneController.text,
+                        email: emailController.text,
+                        birthdate: birthdateController.text,
+                        image: selectedImage,
+                      );
+
+                      if (!context.mounted) return;
+                      Navigator.pop(context, true); // ← return true supaya ProfilePage refresh
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal menyimpan: $e')),
+                      );
+                    } finally {
+                      if (mounted) setState(() => isLoading = false);
+                    }
+                  },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   foregroundColor: Colors.white,

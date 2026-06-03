@@ -1,9 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/components/bottom_navbar.dart';
+import 'package:lautanrejeki/firebase_options.dart';
 import 'package:lautanrejeki/pages/admin_settings_page.dart';
 import 'package:lautanrejeki/pages/history_page.dart';
 import 'package:lautanrejeki/pages/login_page.dart';
@@ -14,16 +16,34 @@ import 'package:lautanrejeki/pages/register_page.dart';
 import 'package:lautanrejeki/pages/splash_screen.dart';
 import 'package:lautanrejeki/pages/timeoff_page.dart';
 import 'package:lautanrejeki/pages/timoff_history_page.dart';
-
 import 'package:lautanrejeki/repositories/auth_repository.dart';
 import 'package:lautanrejeki/repositories/attendance_repository.dart';
-
+import 'package:lautanrejeki/services/notification_service.dart';
 import 'bloc/attendance/attendance_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    print('Firebase error: $e');
+  }
+
+  try {
+    final notificationService = NotificationService();
+    await notificationService.initNotification()
+        .timeout(const Duration(seconds: 5), onTimeout: () {
+      print('Notification init timeout, continuing...');
+    });
+  } catch (e) {
+    print('Notification error: $e');
+  }
+
   await initializeDateFormatting('id_ID', null);
+
   runApp(const MyApp());
 }
 

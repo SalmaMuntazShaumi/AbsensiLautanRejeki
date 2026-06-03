@@ -14,17 +14,34 @@
     final String role;
     final String phone;
     final String birthDate;
+    final String email;
+    final String password;
 
     const RegisterRequested({
       required this.name,
       required this.role,
       required this.phone,
       required this.birthDate,
+      required this.email,
+      required this.password,
     });
 
     @override
-    List<Object> get props => [name, role, phone, birthDate];
+    List<Object> get props => [name, role, phone, birthDate, email, password];
 
+  }
+
+  class LoginRequested extends AuthEvent {
+    final String email;
+    final String password;
+
+    const LoginRequested({
+      required this.email,
+      required this.password,
+    });
+
+    @override
+    List<Object> get props => [email, password];
   }
 
   /// Event untuk request OTP via nomor telepon

@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -121,6 +122,43 @@ class AttendanceRepository {
       return data.map((item) => AttendanceHistoryModel.fromJson(item)).toList();
     } catch (e) {
       throw Exception('Failed to fetch history: $e');
+    }
+  }
+
+  /// Get attendance hari ini dengan token (untuk notification service)
+  Future<Map<String, dynamic>?> getAttendanceTodayByToken(String token) async {
+    try {
+      final dio = await _getDio();
+
+      final response = await dio.get(
+        'api/attendance/today',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      print('Attendance today response status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final data = response.data;
+          if (data is Map<String, dynamic>) {
+            // Return data atau null jika belum ada attendance
+            return data['data'] ?? data;
+          }
+        } catch (e) {
+          print('Error parsing attendance: $e');
+          return null;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error fetching attendance today: $e');
+      return null;
     }
   }
 }

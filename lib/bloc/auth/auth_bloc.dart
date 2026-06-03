@@ -15,6 +15,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<AuthStatusChanged>(_onAuthStatusChanged);
+    on<LoginRequested>(_onLoginRequested);
+  }
+
+  Future<void> _onLoginRequested(
+      LoginRequested event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(const AuthLoading());
+    try {
+      final userData = await _authRepository.login(
+        email: event.email,
+        password: event.password,
+      );
+
+      final token = userData['token'];
+
+      await SessionService.saveSession(
+        token: token,
+        userData: userData,
+      );
+
+      emit(AuthSuccess(
+        message: 'Login berhasil',
+        userData: userData,
+        token: token,
+      ));
+    } catch (e) {
+      emit(AuthFailure(error: e.toString()));
+    }
   }
 
   /// Handle request OTP event
@@ -84,6 +113,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         role: event.role,
         phone: event.phone,
         birthDate: event.birthDate,
+        email: event.email,
+        password: event.password,
       );
 
       if (success) {

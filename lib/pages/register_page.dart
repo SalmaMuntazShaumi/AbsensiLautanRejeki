@@ -18,6 +18,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _bdController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   String? selectedRole = null;
 
@@ -26,6 +28,8 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _bdController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -140,6 +144,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 labelText: 'Nomor Telepon',
               ),
               const SizedBox(height: 20),
+              CustomTextField(
+                controller: _emailController,
+                labelText: 'Email',
+              ),
+              const SizedBox(height: 20),
+              CustomTextField(
+                controller: _passwordController,
+                labelText: 'Password',
+              ),
+              const SizedBox(height: 20),
               GestureDetector(
                 onTap: () async {
                   DateTime? pickedDate = await showDatePicker(
@@ -199,10 +213,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               final role = selectedRole;
                               final phone = _phoneController.text;
                               final bd = _bdController.text;
+                              final email = _emailController.text;
+                              final password = _passwordController.text;
 
                               if (name.isEmpty ||
                                   phone.isEmpty ||
                                   bd.isEmpty ||
+                                  email.isEmpty ||
+                                  password.isEmpty ||
                                   role == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -219,6 +237,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                       role: role,
                                       phone: phone,
                                       birthDate: bd,
+                                      email: email,
+                                      password: password,
                                     ),
                                   );
                             },

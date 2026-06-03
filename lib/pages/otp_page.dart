@@ -39,16 +39,24 @@ class _OtpPageState extends State<OtpPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+    return WillPopScope(
+        onWillPop: () async {
+          // Jangan izinkan back button, navigasi ke login dengan replacement
+          Navigator.pushReplacementNamed(context, '/login');
+          return false;
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.backgroundColor,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.textColor),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ),
       body: SafeArea(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -237,6 +245,7 @@ class _OtpPageState extends State<OtpPage> {
           ),
         ),
       ),
+    )
     );
   }
 }
