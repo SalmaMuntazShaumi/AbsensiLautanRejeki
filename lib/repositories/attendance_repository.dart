@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:lautanrejeki/config/app_config.dart';
 import 'package:lautanrejeki/models/attendance_history_model.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/attendance_model.dart';
 
@@ -102,27 +103,26 @@ class AttendanceRepository {
     }
   }
 
-  Future<List<AttendanceHistoryModel>> fetchAttendanceHistory(
-      String token,
-      ) async {
-    try {
-      final dio = await _getDio();
-      final response = await dio.get(
-        'api/history',
-        options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
+  // repositories/attendance_repository.dart
+  Future<List<AttendanceHistoryModel>> fetchAttendanceHistory(String token) async {
+    final apiUrl = await AppConfig.getBaseUrl();
 
-      final List data = response.data['data'];
-      print(response.data);
-      return data.map((item) => AttendanceHistoryModel.fromJson(item)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch history: $e');
+    final response = await http.get(
+      Uri.parse('$apiUrl/api/attendance/history'), // ← endpoint baru
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      final List list = data['data'];
+      return list.map((e) => AttendanceHistoryModel.fromJson(e)).toList();
     }
+
+    throw Exception(data['message'] ?? 'Gagal mengambil riwayat');
   }
 
   /// Get attendance hari ini dengan token (untuk notification service)

@@ -55,15 +55,14 @@ class CustomHistoryCard extends StatelessWidget {
         label = 'Terlambat';
         break;
 
-      case 'present':
+      case 'on_time':
 
         color = Colors.green;
         icon = Icons.check_circle;
-        label = 'Hadir';
+        label = "Tepat Waktu";
         break;
 
       default:
-
         color = Colors.grey;
         icon = Icons.info;
         label = history.status ?? '-';
