@@ -44,14 +44,10 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> selectMonth() async {
     final picked = await showDatePicker(
       context: context,
-
       initialDate: selectedMonth,
-
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-
       initialDatePickerMode: DatePickerMode.year,
-
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -66,7 +62,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
     if (picked != null) {
       setState(() {
-        selectedMonth = picked;
+        selectedMonth = DateTime(picked.year, picked.month);
       });
     }
   }
