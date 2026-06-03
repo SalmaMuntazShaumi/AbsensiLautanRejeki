@@ -13,7 +13,7 @@ class AppConfig {
   // ─── Default dari --dart-define (di-inject saat build) ────────────────────
   // Jalankan: flutter build apk --dart-define=BASE_URL=https://api.kantorku.com
   static const String _defaultBaseUrl =
-  String.fromEnvironment('BASE_URL', defaultValue: 'http://api.lautanrejeki.id');
+  String.fromEnvironment('BASE_URL', defaultValue: 'https://api.lautanrejeki.id');
 
   static final double _defaultLat = double.tryParse(
     const String.fromEnvironment('OFFICE_LAT'),

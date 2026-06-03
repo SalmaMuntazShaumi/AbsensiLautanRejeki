@@ -9,6 +9,8 @@ import 'package:lautanrejeki/pages/edit_profile_page.dart';
 import 'package:lautanrejeki/repositories/users_repository.dart';
 import 'package:lautanrejeki/services/session_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
+import 'package:lautanrejeki/models/user_model.dart';
+
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -51,31 +53,26 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // profile_page.dart — tambahkan method ini di dalam _ProfilePageState
   Future<void> fetchProfile() async {
     try {
       final token = await SessionService.getToken();
-
-      if (token == null) {
-        return;
-      }
+      if (token == null) return;
 
       final data = await _usersRepository.fetchUserData(token);
 
       setState(() {
-        name = data['name'] ?? '';
-        email = data['email'] ?? '';
-        role = data['role'] ?? '';
-        phone = data['phone'] ?? '';
-        birthdate = data['birthdate'] ?? '';
-        photoUrl = data['photo_url'] ?? '';
+        name      = data.name ?? '';
+        email     = data.email ?? '';
+        role      = data.role ?? '';
+        phone     = data.phone ?? '';
+        birthdate = data.birthdate ?? '';
+        photoUrl  = data.photoUrl ?? '';
         isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-
-      debugPrint(e.toString());
+      setState(() => isLoading = false);
+      debugPrint('fetchProfile error: $e');
     }
   }
 
@@ -177,14 +174,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 24),
 
                   _buildProfileTile(
-                    icon: Icons.email_outlined,
-                    title: 'Email',
-                    value: email,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  _buildProfileTile(
                     icon: Icons.phone_outlined,
                     title: 'Phone Number',
                     value: phone,
@@ -196,6 +185,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icons.calendar_month_outlined,
                     title: 'Birthdate',
                     value: birthdate,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildProfileTile(
+                    icon: Icons.mail_outline,
+                    title: 'Email',
+                    value: email,
                   ),
 
                   const SizedBox(height: 32),
@@ -220,6 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             builder: (_) => EditProfilePage(
                               name: name,
                               phone: phone,
+                              email: email,
                               birthdate: birthdate,
                               photoUrl: photoUrl,
                             ),

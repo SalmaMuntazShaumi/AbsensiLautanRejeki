@@ -89,6 +89,8 @@ class CustomAbsentCard extends StatelessWidget {
 
         AttendanceLoaded? loadedState;
 
+        bool isLeave = false;
+
         if (state is AttendanceLoaded) {
           loadedState = state;
         }
@@ -112,8 +114,13 @@ class CustomAbsentCard extends StatelessWidget {
           );
 
           status =
-              loadedState.attendance.status
-                  ?? '';
+              loadedState.attendance.status == "on_time"
+                  ? "Tepat Waktu"
+                  : loadedState.attendance.status == "leave"
+                  ? "Cuti"
+                  : loadedState.attendance.status == "late"
+                  ? "Terlambat"
+                  : "";
 
           hasClockedIn =
               loadedState.attendance.clockIn
@@ -122,6 +129,8 @@ class CustomAbsentCard extends StatelessWidget {
           hasClockedOut =
               loadedState.attendance.clockOut
                   != null;
+
+          isLeave = loadedState.attendance.status == 'leave';
         }
 
         return Container(
@@ -176,7 +185,6 @@ class CustomAbsentCard extends StatelessWidget {
               ),
 
               const SizedBox(height: 16),
-
               // STATUS
               hasClockedIn
                   ? Text(
@@ -212,25 +220,17 @@ class CustomAbsentCard extends StatelessWidget {
                     ),
                   ),
 
-                  onPressed:
-                  state
-                  is AttendanceLoading
+                  onPressed: state is AttendanceLoading
                       ? null
+                      : isLeave
+                      ? null  // ← disabled kalau cuti
                       : hasClockedOut
                       ? null
                       : () {
-
                     if (!hasClockedIn) {
-
-                      _handleClockInFlow(
-                        context,
-                      );
-
+                      _handleClockInFlow(context);
                     } else {
-
-                      _handleClockOutFlow(
-                        context,
-                      );
+                      _handleClockOutFlow(context);
                     }
                   },
 
@@ -248,8 +248,7 @@ class CustomAbsentCard extends StatelessWidget {
                     ),
                   )
                       : Text(
-
-                    !hasClockedIn
+                    isLeave ? 'Cuti' : !hasClockedIn
                         ? 'Clock In'
                         : hasClockedOut
                         ? 'Completed'

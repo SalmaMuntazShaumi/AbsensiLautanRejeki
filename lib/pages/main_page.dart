@@ -20,21 +20,43 @@ class _MainPageState extends State<MainPage> {
     const ProfilePage(),
   ];
 
+  Future<bool> _showExitConfirmation(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Keluar'),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-
-      body: pages[currentIndex],
-
-      bottomNavigationBar: CustomBottomNavbar(
-
-        currentIndex: currentIndex,
-
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
+    return WillPopScope(
+      onWillPop: () async {
+        return _showExitConfirmation(context);
+      },
+      child: Scaffold(
+        body: pages[currentIndex],
+        bottomNavigationBar: CustomBottomNavbar(
+          currentIndex: currentIndex,
+          onTap: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

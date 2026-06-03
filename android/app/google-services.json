@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "309212778157",
+    "project_id": "lautanrejeki-7a78f",
+    "storage_bucket": "lautanrejeki-7a78f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:309212778157:android:510f13d90f3cc0c55d4024",
+        "android_client_info": {
+          "package_name": "com.lautanrejeki.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9mDKIpHua6tU9kFesdwpY2i7JUHURXdk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

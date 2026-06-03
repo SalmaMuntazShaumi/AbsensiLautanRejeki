@@ -32,6 +32,7 @@ class AuthRepository {
 
       print('OTP response status: ${response.statusCode}');
       print('OTP response body: ${response.body}');
+      print('OTP response headers: ${response.headers}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -139,7 +140,7 @@ class AuthRepository {
   }) async {
     try {
       final apiUrl = await _baseUrl();
-      final body = const JsonEncoder().convert({'email': email, 'password': password});
+      final body = const JsonEncoder().convert({'login': email, 'password': password});
 
       print('Sending login request to $apiUrl/api/login');
 
@@ -216,21 +217,21 @@ class AuthRepository {
   /// Register user
   Future<bool> register({
     required String name,
-    required String email,
-    required String password,
     required String role,
     required String phone,
+    required String email,
+    required String password,
     required String birthDate,
   }) async {
     try {
       final apiUrl = await _baseUrl();
       final body = const JsonEncoder().convert({
         'name': name,
-        'email': email,
-        'password': password,
         'role': role,
         'phone': phone,
         'birthdate': birthDate,
+        'email': email,
+        'password': password,
       });
 
       print('Sending register request to $apiUrl/api/register');
