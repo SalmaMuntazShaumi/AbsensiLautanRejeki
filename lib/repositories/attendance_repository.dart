@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:lautanrejeki/config/app_config.dart';
 import 'package:lautanrejeki/models/attendance_history_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:lautanrejeki/services/notification_service.dart';
 
 import '../models/attendance_model.dart';
 
@@ -70,6 +71,8 @@ class AttendanceRepository {
           },
         ),
       );
+
+      await NotificationService.instance.cancelClockInIfAlreadyClockedIn(token);
 
       return AttendanceModel.fromJson(response.data['data']);
     } catch (e) {

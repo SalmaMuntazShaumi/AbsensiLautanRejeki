@@ -146,26 +146,6 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
               const SizedBox(height: 28),
 
-              // ── Seksi URL Backend ─────────────────────────────────
-              _sectionTitle('🌐  URL Backend API'),
-              const SizedBox(height: 10),
-              _buildTextField(
-                controller: _urlCtrl,
-                label: 'Base URL',
-                hint: 'https://api.kantorku.com',
-                keyboardType: TextInputType.url,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
-                  final uri = Uri.tryParse(v.trim());
-                  if (uri == null || !uri.hasScheme) {
-                    return 'URL tidak valid (contoh: http://192.168.1.1:8000)';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 28),
-
               // ── Seksi Lokasi Kantor ───────────────────────────────
               _sectionTitle('📍  Koordinat Kantor'),
               const SizedBox(height: 6),

@@ -1,12 +1,10 @@
-  import 'dart:async';
-
   import 'package:flutter/cupertino.dart';
   import 'package:flutter/material.dart';
   import 'package:flutter_bloc/flutter_bloc.dart';
   import 'package:lautanrejeki/bloc/attendance/attendance_bloc.dart';
   import 'package:lautanrejeki/components/custom_absent_card.dart';
   import 'package:lautanrejeki/repositories/users_repository.dart';
-  import 'package:lautanrejeki/services/notification_service.dart';
+import 'package:lautanrejeki/services/notification_service.dart';
   import 'package:lautanrejeki/services/session_service.dart';
 
   import '../bloc/attendance/attendance_event.dart';
@@ -33,27 +31,6 @@
       super.initState();
 
       initUser();
-      Timer.periodic(const Duration(minutes: 1), (_) {
-        _checkNotifications();
-      });
-    }
-
-    Future<void> _checkNotifications() async {
-      try {
-        final now = DateTime.now();
-
-        // Check clock-in reminder at 9:00 AM
-        if (now.hour == 9 && now.minute == 0) {
-          await NotificationService().checkAndSendClockInReminder();
-        }
-
-        // Check clock-out reminder at 6:00 PM
-        if (now.hour == 18 && now.minute == 0) {
-          await NotificationService().checkAndSendClockOutReminder();
-        }
-      } catch (e) {
-        print('Error checking notifications: $e');
-      }
     }
 
     Future<void> initUser() async {
@@ -95,7 +72,6 @@
 
     @override
     void dispose() {
-      NotificationService().disposeNotifications();
       super.dispose();
     }
 
@@ -178,7 +154,14 @@
                     ],
                   ),
                 ),
-              )
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  await NotificationService.instance.debugPendingNotifications();
+                },
+                child: const Text('Cek Pending Notif'),
+              ),
             ],
           ),
         ),

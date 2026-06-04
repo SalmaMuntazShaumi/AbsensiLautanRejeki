@@ -1,385 +1,325 @@
-
 import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lautanrejeki/repositories/attendance_repository.dart';
-import 'package:lautanrejeki/services/session_service.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
 
 class NotificationService {
-  static final NotificationService _instance =
-  NotificationService._internal();
+  NotificationService._();
 
-  factory NotificationService() {
-    return _instance;
-  }
-
-  NotificationService._internal();
+  static final NotificationService instance = NotificationService._();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
-
   final AttendanceRepository _attendanceRepository = AttendanceRepository();
 
-  static const String clockInTaskId = 'clock_in_reminder';
-  static const String clockOutTaskId = 'clock_out_reminder';
+  static const int clockInNotifId = 1;
+  static const int clockOutNotifId = 2;
 
-  // Flag untuk tracking notification yang sudah dikirim hari ini
-  bool _clockInNotificationSent = false;
-  bool _clockOutNotificationSent = false;
+  // ─── INIT ─────────────────────────────────────────────────────────────────
 
   Future<void> initNotification() async {
-    try {
-      // Initialize local notifications dulu
-      await _initLocalNotifications();
+    _initTimezone();
+    await _initLocalNotification();
+    await _initFirebaseMessaging();
+    await _requestExactAlarmPermission();
+    await _requestBatteryOptimization();
 
-      // Initialize Firebase Messaging
-      try {
-        await Firebase.initializeApp();
-      } catch (e) {
-        print('Firebase already initialized: $e');
+    print('=== STARTING SCHEDULE ===');
+    await scheduleClockInReminder();
+    print('=== CLOCK IN DONE ===');
+    await scheduleClockOutReminder();
+    print('=== CLOCK OUT DONE ===');
+  }
+
+  void _initTimezone() {
+    tz_data.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+  }
+
+  Future<void> _initLocalNotification() async {
+    const androidSettings =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
+    const settings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    // v17: positional argument
+    await _flutterLocalNotificationsPlugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        print('Notification clicked: ${response.payload}');
+      },
+    );
+
+    if (Platform.isAndroid) {
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'default_channel',
+        'Default Notifications',
+        description: 'Used for important notifications',
+        importance: Importance.max,
+        playSound: true,
+      );
+
+      await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
+  }
+
+  Future<void> _requestExactAlarmPermission() async {
+    if (!Platform.isAndroid) return;
+
+    final androidPlugin = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    await androidPlugin?.requestExactAlarmsPermission();
+    await androidPlugin?.requestNotificationsPermission();
+  }
+
+  Future<void> _requestBatteryOptimization() async {
+    if (!Platform.isAndroid) return;
+
+    final status = await Permission.ignoreBatteryOptimizations.status;
+    print('Battery optimization status: $status');
+
+    if (!status.isGranted) {
+      final result = await Permission.ignoreBatteryOptimizations.request();
+      print('Battery optimization request result: $result');
+    }
+  }
+
+  Future<void> _initFirebaseMessaging() async {
+    await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+    final token = await _firebaseMessaging.getToken();
+    print('FCM Token: $token');
+  }
+
+  // ─── SCHEDULE ─────────────────────────────────────────────────────────────
+
+  Future<void> scheduleClockInReminder() async {
+    try {
+      // v17: positional argument
+      await _flutterLocalNotificationsPlugin.cancel(clockInNotifId);
+
+      final scheduledDate = _nextInstanceOfTime(9, 0);
+
+      print('Clock-in scheduling at: $scheduledDate');
+
+      // v17: semua positional untuk 5 arg pertama
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        clockInNotifId,
+        'Reminder Clock In',
+        'Jangan lupa clock in hari ini',
+        scheduledDate,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'default_channel',
+            'Default Notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+      );
+
+      print('Clock-in zonedSchedule SUCCESS');
+    } catch (e) {
+      print('Clock-in zonedSchedule ERROR: $e');
+    }
+  }
+
+  Future<void> scheduleClockOutReminder() async {
+    try {
+      await _flutterLocalNotificationsPlugin.cancel(clockOutNotifId);
+
+      final scheduledDate = _nextInstanceOfTime(18, 0);
+      print('Clock-out scheduling at: $scheduledDate');
+
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        clockOutNotifId,
+        'Reminder Clock Out',
+        'Jangan lupa clock out sebelum pulang',
+        scheduledDate,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'default_channel',
+            'Default Notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+
+      print('Clock-out zonedSchedule SUCCESS');
+    } catch (e) {
+      print('Clock-out zonedSchedule ERROR: $e');
+    }
+  }
+
+  // ─── TEST & DEBUG ──────────────────────────────────────────────────────────
+
+  Future<void> testNotification() async {
+    await _flutterLocalNotificationsPlugin.show(
+      99,
+      'Test Notif',
+      'Kalau ini muncul, local notification works!',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'default_channel',
+          'Default Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+    );
+    print('Test notification sent');
+  }
+
+  Future<void> debugPendingNotifications() async {
+    final List<PendingNotificationRequest> pending =
+    await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    print('=== PENDING NOTIFICATIONS ===');
+    print('Total: ${pending.length}');
+    for (final notif in pending) {
+      print('ID: ${notif.id} | Title: ${notif.title}');
+    }
+
+    final now = tz.TZDateTime.now(tz.local);
+    print('Timezone: ${tz.local.name}');
+    print('Current TZ time: $now');
+    print('Device local time: ${DateTime.now()}');
+    print('=============================');
+  }
+
+  // ─── CANCEL JIKA SUDAH CLOCK IN/OUT ───────────────────────────────────────
+
+  Future<void> cancelClockInIfAlreadyClockedIn(String token) async {
+    try {
+      final attendance =
+      await _attendanceRepository.getAttendanceTodayByToken(token);
+
+      if (attendance != null && attendance['clock_in'] != null) {
+        await _flutterLocalNotificationsPlugin.cancel(clockInNotifId);
+        print('Clock-in notif cancelled — user sudah clock-in');
       }
-
-      // Request permission untuk iOS
-      NotificationSettings settings =
-      await _firebaseMessaging.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-
-      print('Notification permission status: ${settings.authorizationStatus}');
-
-      // Get FCM token
-      String? fcmToken = await _firebaseMessaging.getToken();
-      print('FCM Token: $fcmToken');
-
-      // Handle foreground messages
-      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-      // Handle background messages
-      FirebaseMessaging.onBackgroundMessage(
-          _firebaseMessagingBackgroundHandler);
-
-      // Handle notification tap
-      FirebaseMessaging.instance
-          .getInitialMessage()
-          .then((message) => _handleNotificationTap(message));
-
-      FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
-
-      // Setup background tasks untuk reminder
-      await _setupBackgroundTasks();
-
-      print('Notification service initialized successfully');
     } catch (e) {
-      print('Error initializing notifications: $e');
+      print('Error cancel clock-in notif: $e');
     }
   }
 
-  Future<void> _initLocalNotifications() async {
+  Future<void> cancelClockOutIfAlreadyClockedOut(String token) async {
     try {
-      const AndroidInitializationSettings androidSettings =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      final attendance =
+      await _attendanceRepository.getAttendanceTodayByToken(token);
 
-      const DarwinInitializationSettings iosSettings =
-      DarwinInitializationSettings();
-
-      const InitializationSettings initializationSettings =
-      InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      );
-
-      await _localNotifications.initialize(
-        onDidReceiveNotificationResponse: (NotificationResponse response) {
-          print('Notification clicked: ${response.payload}');
-        }, settings: initializationSettings,
-      );
-
-      if (Platform.isAndroid) {
-        final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
-        _localNotifications
-            .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-
-        if (androidPlugin != null) {
-          await androidPlugin.createNotificationChannel(
-            const AndroidNotificationChannel(
-              'high_importance_channel',
-              'High Importance Notifications',
-              importance: Importance.high,
-              sound: RawResourceAndroidNotificationSound('notification'),
-              playSound: true,
-            ),
-          );
-        }
+      if (attendance != null && attendance['clock_out'] != null) {
+        await _flutterLocalNotificationsPlugin.cancel(clockOutNotifId);
+        print('Clock-out notif cancelled — user sudah clock-out');
       }
     } catch (e) {
-      print('Error initializing local notifications: $e');
+      print('Error cancel clock-out notif: $e');
     }
   }
 
-  static Future<void> _firebaseMessagingBackgroundHandler(
-      RemoteMessage message) async {
-    try {
-      await Firebase.initializeApp();
-      print('Handling a background message: ${message.messageId}');
-      _instance._handleRemoteMessage(message);
-    } catch (e) {
-      print('Error in background handler: $e');
+  // ─── HELPERS ──────────────────────────────────────────────────────────────
+
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
     }
+
+    return scheduled;
   }
+
+  // ─── FIREBASE HANDLERS ────────────────────────────────────────────────────
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    try {
-      print('Got a message in foreground');
-      print('Message data: ${message.data}');
+    if (message.notification == null) return;
 
-      if (message.notification != null) {
-        await _showLocalNotification(
-          title: message.notification!.title ?? 'Notifikasi',
-          body: message.notification!.body ?? '',
-          payload: message.data.toString(),
-        );
-      }
-    } catch (e) {
-      print('Error handling foreground message: $e');
-    }
+    await _showLocalNotification(
+      title: message.notification!.title ?? 'Notifikasi',
+      body: message.notification!.body ?? '',
+      payload: message.data.toString(),
+    );
   }
 
-  Future<void> _handleRemoteMessage(RemoteMessage message) async {
-    try {
-      print('Handling remote message');
-      if (message.notification != null) {
-        await _showLocalNotification(
-          title: message.notification!.title ?? 'Notifikasi',
-          body: message.notification!.body ?? '',
-          payload: message.data.toString(),
-        );
-      }
-    } catch (e) {
-      print('Error handling remote message: $e');
-    }
+  Future<void> _handleNotificationTap(RemoteMessage message) async {
+    print('Notification opened: ${message.data}');
   }
 
-  Future<void> _handleNotificationTap(RemoteMessage? message) async {
-    if (message != null) {
-      print('Notification tapped: ${message.data}');
-    }
-  }
+  // ─── SHOW NOTIFICATION ────────────────────────────────────────────────────
 
   Future<void> _showLocalNotification({
     required String title,
     required String body,
     String? payload,
   }) async {
-    try {
-      const AndroidNotificationDetails androidDetails =
-      AndroidNotificationDetails(
-        'high_importance_channel',
-        'High Importance Notifications',
-        channelDescription:
-        'This channel is used for important notifications',
-        importance: Importance.high,
-        priority: Priority.high,
-        sound: RawResourceAndroidNotificationSound('notification'),
-        playSound: true,
-      );
-
-      const DarwinNotificationDetails iosDetails =
-      DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
-
-      const NotificationDetails notificationDetails = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
-
-      await _localNotifications.show(
-        id: DateTime.now().millisecond % 10000,
-        title: title,
-        body: body,
-        notificationDetails: notificationDetails,
-        payload: payload,
-      );
-    } catch (e) {
-      print('Error showing local notification: $e');
-    }
-  }
-
-  Future<void> _setupBackgroundTasks() async {
-    try {
-      // Initialize Workmanager
-      await Workmanager().initialize(
-        callbackDispatcher,
-        isInDebugMode: false,
-      );
-
-      // Cancel existing tasks
-      await Workmanager().cancelAll();
-
-      // Schedule clock-in reminder setiap jam 9:00
-      await Workmanager().registerPeriodicTask(
-        clockInTaskId,
-        'clockInReminder',
-        frequency: const Duration(hours: 24),
-        initialDelay: _getDelayToClock(9, 0),
-        constraints: Constraints(
-          requiresDeviceIdle: false,
-          requiresCharging: false,
-          requiresBatteryNotLow: false,
-          requiresStorageNotLow: false,
+    await _flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'default_channel',
+          'Default Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
         ),
-        backoffPolicy: BackoffPolicy.exponential,
-        backoffPolicyDelay: const Duration(minutes: 15),
-      );
-
-      // Schedule clock-out reminder setiap jam 18:00
-      await Workmanager().registerPeriodicTask(
-        clockOutTaskId,
-        'clockOutReminder',
-        frequency: const Duration(hours: 24),
-        initialDelay: _getDelayToClock(18, 0),
-        constraints: Constraints(
-          requiresDeviceIdle: false,
-          requiresCharging: false,
-          requiresBatteryNotLow: false,
-          requiresStorageNotLow: false,
-        ),
-        backoffPolicy: BackoffPolicy.exponential,
-        backoffPolicyDelay: const Duration(minutes: 15),
-      );
-
-      print('Background tasks initialized successfully');
-    } catch (e) {
-      print('Error setting up background tasks: $e');
-    }
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: payload,
+    );
   }
 
-  Duration _getDelayToClock(int hour, int minute) {
-    final now = DateTime.now();
-    var scheduledDate = DateTime(now.year, now.month, now.day, hour, minute);
+  // ─── CANCEL ALL ───────────────────────────────────────────────────────────
 
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-
-    return scheduledDate.difference(now);
+  Future<void> cancelAllNotifications() async {
+    await _flutterLocalNotificationsPlugin.cancelAll();
   }
-
-  Future<void> checkAndSendClockInReminder() async {
-    try {
-      final token = await SessionService.getToken();
-      if (token == null) {
-        print('No token found for clock-in check');
-        return;
-      }
-
-      final now = DateTime.now();
-
-      // Check if notification sudah dikirim hari ini
-      if (_clockInNotificationSent) {
-        print('Clock-in notification already sent today');
-        return;
-      }
-
-      if (now.hour >= 9) {
-        // Cek apakah user sudah clock-in hari ini
-        final attendance =
-        await _attendanceRepository.getAttendanceTodayByToken(token);
-
-        if (attendance == null || attendance['clock_in'] == null) {
-          await _showLocalNotification(
-            title: 'Reminder Clock In',
-            body:
-            'Anda belum melakukan clock-in. Sudah jam ${now.hour}:${now.minute.toString().padLeft(2, '0')}',
-          );
-          _clockInNotificationSent = true;
-        }
-      }
-    } catch (e) {
-      print('Error checking clock-in reminder: $e');
-    }
-  }
-
-  Future<void> checkAndSendClockOutReminder() async {
-    try {
-      final token = await SessionService.getToken();
-      if (token == null) {
-        print('No token found for clock-out check');
-        return;
-      }
-
-      final now = DateTime.now();
-
-      // Check if notification sudah dikirim hari ini
-      if (_clockOutNotificationSent) {
-        print('Clock-out notification already sent today');
-        return;
-      }
-
-      if (now.hour >= 18) {
-        // Cek apakah user sudah clock-out hari ini
-        final attendance =
-        await _attendanceRepository.getAttendanceTodayByToken(token);
-
-        if (attendance != null && attendance['clock_in'] != null) {
-          if (attendance['clock_out'] == null) {
-            await _showLocalNotification(
-              title: 'Reminder Clock Out',
-              body:
-              'Anda belum melakukan clock-out. Sudah jam ${now.hour}:${now.minute.toString().padLeft(2, '0')}',
-            );
-            _clockOutNotificationSent = true;
-          }
-        }
-      }
-    } catch (e) {
-      print('Error checking clock-out reminder: $e');
-    }
-  }
-
-  Future<void> resetDailyNotifications() async {
-    _clockInNotificationSent = false;
-    _clockOutNotificationSent = false;
-  }
-
-  void disposeNotifications() {
-    Workmanager().cancelByTag(clockInTaskId);
-    Workmanager().cancelByTag(clockOutTaskId);
-  }
-}
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    try {
-      // Initialize Firebase
-      await Firebase.initializeApp();
-
-      final notificationService = NotificationService();
-
-      if (task == 'clockInReminder') {
-        print('Clock-in reminder task triggered');
-        await notificationService.checkAndSendClockInReminder();
-      } else if (task == 'clockOutReminder') {
-        print('Clock-out reminder task triggered');
-        await notificationService.checkAndSendClockOutReminder();
-      }
-
-      return true;
-    } catch (e) {
-      print('Error in background task: $e');
-      return false;
-    }
-  });
 }
