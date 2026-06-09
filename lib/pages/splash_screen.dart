@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_event.dart';
 import 'package:lautanrejeki/bloc/auth/auth_state.dart';
+import 'package:lautanrejeki/services/notification_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -18,8 +19,10 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
+    Future.microtask(() async {
       context.read<AuthBloc>().add(AuthStatusChanged());
+      await NotificationService.instance.scheduleClockInReminder();
+      await NotificationService.instance.scheduleClockOutReminder();
     });
   }
 
@@ -29,7 +32,12 @@ class _SplashScreenState extends State<SplashScreen> {
       listener: (context, state) {
 
         if (state is AuthSuccess) {
-          Navigator.pushReplacementNamed(context, '/main');
+          final role = state.userData['role'] ?? '';  // ← ambil dari state
+          Navigator.pushReplacementNamed(  // ← pakai pushReplacementNamed bukan pushNamed
+            context,
+            '/main',
+            arguments: {'role': role},
+          );
         }
 
         if (state is AuthUnauthenticated) {
@@ -37,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.backgroundColor,
+        backgroundColor: Colors.white,
         body: Center(
           child: Image.asset(
             "assets/company.png",

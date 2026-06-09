@@ -155,13 +155,6 @@ import 'package:lautanrejeki/services/notification_service.dart';
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await NotificationService.instance.debugPendingNotifications();
-                },
-                child: const Text('Cek Pending Notif'),
-              ),
             ],
           ),
         ),

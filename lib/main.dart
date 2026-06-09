@@ -7,6 +7,7 @@ import 'package:lautanrejeki/firebase_options.dart';
 
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/attendance/attendance_bloc.dart';
+import 'package:lautanrejeki/pages/location_page.dart';
 
 import 'package:lautanrejeki/repositories/auth_repository.dart';
 import 'package:lautanrejeki/repositories/attendance_repository.dart';
@@ -104,13 +105,22 @@ class MyApp extends StatelessWidget {
         );
 
       case '/main':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const MainPage(),
+          builder: (_) => MainPage(
+            role: args?['role'] as String? ?? '',
+          ),
         );
 
       case '/history':
         return MaterialPageRoute(
           builder: (_) => const HistoryPage(),
+        );
+
+      case 'location':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => LocationPage(role: args?['role'] ?? ''),
         );
 
       case '/profile':

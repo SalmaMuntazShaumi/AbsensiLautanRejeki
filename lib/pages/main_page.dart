@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lautanrejeki/components/bottom_navbar.dart';
 import 'package:lautanrejeki/pages/history_page.dart';
 import 'package:lautanrejeki/pages/home_page.dart';
+import 'package:lautanrejeki/pages/location_page.dart';
 import 'package:lautanrejeki/pages/profile_page.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  String role;
+  MainPage({super.key, required this.role});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -14,11 +16,16 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int currentIndex = 0;
 
-  final List<Widget> pages = [
-    const HomePage(),
-    const HistoryPage(),
-    const ProfilePage(),
-  ];
+  List<Widget> get pages {
+    final isDriver = widget.role.toLowerCase() == 'driver';
+    print('Role: ${widget.role} | isDriver: $isDriver'); // ← tambah ini
+    return [
+      const HomePage(),
+      const HistoryPage(),
+      if (isDriver) LocationPage(role: widget.role),
+      const ProfilePage(),
+    ];
+  }
 
   Future<bool> _showExitConfirmation(BuildContext context) async {
     return await showDialog<bool>(
@@ -50,6 +57,7 @@ class _MainPageState extends State<MainPage> {
       child: Scaffold(
         body: pages[currentIndex],
         bottomNavigationBar: CustomBottomNavbar(
+          role: widget.role,
           currentIndex: currentIndex,
           onTap: (index) {
             setState(() {

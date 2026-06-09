@@ -49,7 +49,7 @@ class NotificationService {
 
   Future<void> _initLocalNotification() async {
     const androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@mipmap/launcher_icon');
     const iosSettings = DarwinInitializationSettings();
     const settings = InitializationSettings(
       android: androidSettings,
@@ -57,10 +57,14 @@ class NotificationService {
     );
 
     // v17: positional argument
+    // Di initNotification, setelah notif muncul, jadwalkan ulang
     await _flutterLocalNotificationsPlugin.initialize(
       settings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
         print('Notification clicked: ${response.payload}');
+        // Reschedule untuk hari berikutnya (skip Minggu otomatis)
+        await scheduleClockInReminder();
+        await scheduleClockOutReminder();
       },
     );
 
@@ -139,6 +143,7 @@ class NotificationService {
           android: AndroidNotificationDetails(
             'default_channel',
             'Default Notifications',
+            icon: '@mipmap/launcher_icon',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
@@ -172,6 +177,7 @@ class NotificationService {
           android: AndroidNotificationDetails(
             'default_channel',
             'Default Notifications',
+            icon: '@mipmap/launcher_icon',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
@@ -189,43 +195,6 @@ class NotificationService {
       print('Clock-out zonedSchedule ERROR: $e');
     }
   }
-
-  // ─── TEST & DEBUG ──────────────────────────────────────────────────────────
-
-  Future<void> testNotification() async {
-    await _flutterLocalNotificationsPlugin.show(
-      99,
-      'Test Notif',
-      'Kalau ini muncul, local notification works!',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'default_channel',
-          'Default Notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-    );
-    print('Test notification sent');
-  }
-
-  Future<void> debugPendingNotifications() async {
-    final List<PendingNotificationRequest> pending =
-    await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
-
-    print('=== PENDING NOTIFICATIONS ===');
-    print('Total: ${pending.length}');
-    for (final notif in pending) {
-      print('ID: ${notif.id} | Title: ${notif.title}');
-    }
-
-    final now = tz.TZDateTime.now(tz.local);
-    print('Timezone: ${tz.local.name}');
-    print('Current TZ time: $now');
-    print('Device local time: ${DateTime.now()}');
-    print('=============================');
-  }
-
   // ─── CANCEL JIKA SUDAH CLOCK IN/OUT ───────────────────────────────────────
 
   Future<void> cancelClockInIfAlreadyClockedIn(String token) async {
@@ -273,6 +242,11 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 
+    // ✅ Skip hari Minggu (DateTime.sunday = 7)
+    while (scheduled.weekday == DateTime.sunday) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+
     return scheduled;
   }
 
@@ -307,6 +281,7 @@ class NotificationService {
         android: AndroidNotificationDetails(
           'default_channel',
           'Default Notifications',
+          icon: '@mipmap/launcher_icon',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,

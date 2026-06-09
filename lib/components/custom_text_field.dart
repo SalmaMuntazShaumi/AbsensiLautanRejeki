@@ -20,6 +20,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return TextField(
       keyboardType: widget.labelText == 'Nomor Telepon' ? TextInputType.phone : TextInputType.text,
       controller: widget.controller,
+      obscureText: widget.labelText == 'Password' ? _obscureText : false,
       decoration: InputDecoration(
         labelText: widget.labelText,
         suffixIcon: widget.labelText == 'Password' ? IconButton(

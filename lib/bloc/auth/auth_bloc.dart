@@ -24,21 +24,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ) async {
     emit(const AuthLoading());
     try {
-      final userData = await _authRepository.login(
+      final response = await _authRepository.login(
         email: event.email,
         password: event.password,
       );
 
-      final token = userData['token'];
+      final token = response['token'];
+      final user = response['user'] as Map<String, dynamic>; // ← ambil nested user
 
       await SessionService.saveSession(
         token: token,
-        userData: userData,
+        userData: user, // ← simpan user object
       );
 
       emit(AuthSuccess(
         message: 'Login berhasil',
-        userData: userData,
+        userData: user, // ← emit user object
         token: token,
       ));
     } catch (e) {
@@ -83,20 +84,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       final token = userData['token'];
+      final user = userData['user'] as Map<String, dynamic>;
 
       // SAVE SESSION
       await SessionService.saveSession(
         token: token,
-        userData: userData,
+        userData: user, // ← ganti
       );
 
-      emit(
-        AuthSuccess(
-          message: 'Login successful',
-          userData: userData,
-          token: token,
-        ),
-      );
+      emit(AuthSuccess(
+        message: 'Login successful',
+        userData: user, // ← ganti
+        token: token,
+      ));
     } catch (e) {
       emit(AuthFailure(error: e.toString()));
     }
