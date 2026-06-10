@@ -16,7 +16,11 @@ class AttendanceRepository {
   /// Dipanggil setiap kali method dieksekusi agar selalu pakai URL terkini.
   Future<Dio> _getDio() async {
     final baseUrl = await AppConfig.getBaseUrl();
-    return Dio(BaseOptions(baseUrl: '$baseUrl/'));
+    return Dio(BaseOptions(
+      baseUrl: '$baseUrl/',
+      responseType: ResponseType.json, // ← tambahkan ini
+      contentType: 'application/json',
+    ));
   }
 
   // =========================
@@ -37,10 +41,20 @@ class AttendanceRepository {
         ),
       );
 
-      final data = response.data['data'];
+      print('TODAY RESPONSE: ${response.data}'); // ← tambah ini
+      final responseData = response.data is String
+          ? jsonDecode(response.data)
+          : response.data;
+
+      final data = responseData['data'];
       if (data == null) return AttendanceModel();
+
+      print('DATA: $data'); // ← tambah ini
+
       return AttendanceModel.fromJson(data);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('ERROR: $e'); // ← tambah ini
+      print('STACK: $stackTrace'); // ← tambah ini
       throw Exception('Failed to get attendance: $e');
     }
   }
@@ -164,4 +178,38 @@ class AttendanceRepository {
       return null;
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchAllAttendanceHistory(
+      String token, {
+        String? date,
+        String? week,
+        String? month,
+        String? year,
+        String? startDate,
+        String? endDate,
+      }) async {
+    final apiUrl = await AppConfig.getBaseUrl();
+
+    final queryParams = <String, String>{};
+    if (date != null) queryParams['date'] = date;
+    if (week != null) queryParams['week'] = week;
+    if (month != null) queryParams['month'] = month;
+    if (year != null) queryParams['year'] = year;
+    if (startDate != null) queryParams['start_date'] = startDate;
+    if (endDate != null) queryParams['end_date'] = endDate;
+
+    final uri = Uri.parse('$apiUrl/api/history').replace(queryParameters: queryParams);
+
+    final response = await http.get(uri, headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(data['data']);
+    }
+    throw Exception(data['message'] ?? 'Gagal mengambil data');
+  }
+
 }

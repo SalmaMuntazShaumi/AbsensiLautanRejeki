@@ -68,7 +68,7 @@ class _OtpPageState extends State<OtpPage> {
               Navigator.pushReplacementNamed(
                 context,
                 '/main',
-                arguments: state.token ?? '',
+                arguments: {'role': state.userData['role'] ?? ''},  // ← Map
               );
             } else if (state is AuthFailure) {
               ScaffoldMessenger.of(context).showSnackBar(

@@ -4,6 +4,7 @@ import 'package:lautanrejeki/pages/history_page.dart';
 import 'package:lautanrejeki/pages/home_page.dart';
 import 'package:lautanrejeki/pages/location_page.dart';
 import 'package:lautanrejeki/pages/profile_page.dart';
+import 'package:lautanrejeki/pages/reports_page.dart';
 
 class MainPage extends StatefulWidget {
   String role;
@@ -18,12 +19,13 @@ class _MainPageState extends State<MainPage> {
 
   List<Widget> get pages {
     final isDriver = widget.role.toLowerCase() == 'driver';
-    print('Role: ${widget.role} | isDriver: $isDriver'); // ← tambah ini
+    final isAdmin = widget.role.toLowerCase() == 'admin';
     return [
-      const HomePage(),
-      const HistoryPage(),
-      if (isDriver) LocationPage(role: widget.role),
-      const ProfilePage(),
+      const HomePage(),           // index 0
+      const HistoryPage(),        // index 1
+      if (isDriver) LocationPage(role: widget.role), // index 2
+      if (isAdmin) const ReportsPage(),              // index 2
+      const ProfilePage(),        // index 2 (normal) / 3 (driver/admin)
     ];
   }
 

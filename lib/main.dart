@@ -8,6 +8,7 @@ import 'package:lautanrejeki/firebase_options.dart';
 import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/attendance/attendance_bloc.dart';
 import 'package:lautanrejeki/pages/location_page.dart';
+import 'package:lautanrejeki/pages/reports_page.dart';
 
 import 'package:lautanrejeki/repositories/auth_repository.dart';
 import 'package:lautanrejeki/repositories/attendance_repository.dart';
@@ -137,6 +138,10 @@ class MyApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const TimeOffHistoryPage(),
         );
+
+      case '/reports':
+        return MaterialPageRoute(
+            builder: (_) => const ReportsPage());
 
       case '/admin_settings':
         return MaterialPageRoute(

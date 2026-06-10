@@ -18,7 +18,9 @@
     @override
     Widget build(BuildContext context) {
       final bool isDriver = role.toLowerCase() == 'driver';
-      final int profileIndex = isDriver ? 3 : 2; // ← index profil menyesuaikan
+      final bool isAdmin = role.toLowerCase() == 'admin';
+      final bool hasExtra = isDriver || isAdmin;
+      final int profileIndex = hasExtra ? 3 : 2;
 
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -35,10 +37,12 @@
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(index: 0, icon: CupertinoIcons.house_alt, label: 'Dashboard'),
+            _buildNavItem(index: 0, icon: CupertinoIcons.house_alt_fill, label: 'Dashboard'),
             _buildNavItem(index: 1, icon: CupertinoIcons.clock_fill, label: 'Riwayat'),
             if (isDriver)
               _buildNavItem(index: 2, icon: CupertinoIcons.car_fill, label: 'Antar'),
+            if (isAdmin)
+              _buildNavItem(index: 2, icon: CupertinoIcons.arrow_down_doc_fill, label: 'Laporan'),
             _buildNavItem(index: profileIndex, icon: CupertinoIcons.person_fill, label: 'Profil'),
           ],
         ),

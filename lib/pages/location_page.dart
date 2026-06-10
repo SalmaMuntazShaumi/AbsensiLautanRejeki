@@ -322,8 +322,8 @@ class _LocationPageState extends State<LocationPage> {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _currentPosition ?? const LatLng(-6.2088, 106.8456),
-                initialZoom: 15,
+                center: _currentPosition ?? const LatLng(-6.2088, 106.8456),
+                zoom: 15,
                 onMapReady: () {
                   // Sekarang aman pakai mapController
                   if (_currentPosition != null) {
@@ -344,29 +344,31 @@ class _LocationPageState extends State<LocationPage> {
                         point: _currentPosition!,
                         width: 50,
                         height: 50,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 3,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryColor
-                                    .withOpacity(0.4),
-                                blurRadius: 8,
-                                spreadRadius: 2,
+                        builder: (context) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 3,
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.local_shipping,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryColor
+                                      .withOpacity(0.4),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.local_shipping,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          );
+                        }
                       ),
                   ],
                 ),
@@ -445,8 +447,8 @@ class _LocationPageState extends State<LocationPage> {
           child: FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: mapCenter,
-              initialZoom: 12,
+              center: mapCenter,
+              zoom: 12,
             ),
             children: [
               TileLayer(
@@ -462,7 +464,7 @@ class _LocationPageState extends State<LocationPage> {
                     point: LatLng(lat, lng),
                     width: 60,
                     height: 60,
-                    child: GestureDetector(
+                    builder: (context) => GestureDetector(
                       onTap: () => _showDriverInfo(driver),
                       child: Column(
                         children: [
