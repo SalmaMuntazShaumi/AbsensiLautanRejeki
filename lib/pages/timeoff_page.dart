@@ -296,7 +296,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                   const SizedBox(height: 14),
 
                   DropdownButtonFormField(
-                    value: selectedType,
+                    initialValue: selectedType,
 
                     decoration: InputDecoration(
                       filled: true,

@@ -17,16 +17,19 @@ class UsersRepository {
     File? image,
   }) async {
     final apiUrl = await _baseUrl();
+    final companyId = await AppConfig.getCompanyId();
 
     var request = http.MultipartRequest(
       'POST',
       Uri.parse('$apiUrl/api/profile/update'),
     );
 
-    request.headers.addAll({
+    final headers = <String, String>{
       'Accept': 'application/json',
       'Authorization': 'Bearer $token',
-    });
+    };
+    if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
+    request.headers.addAll(headers);
 
     request.fields['name'] = name;
     request.fields['phone'] = phone;
@@ -60,13 +63,16 @@ class UsersRepository {
   Future<UserModel> fetchUserData(String token) async {
     try {
       final apiUrl = await _baseUrl();
+      final companyId = await AppConfig.getCompanyId();
+      final headers = <String, String>{
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+      if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
 
       final response = await http.get(
         Uri.parse('$apiUrl/api/user'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
       );
 
       final data = jsonDecode(response.body);

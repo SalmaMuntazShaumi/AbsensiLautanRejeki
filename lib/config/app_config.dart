@@ -9,6 +9,7 @@ class AppConfig {
   static const _keyOfficeLat = 'config_office_lat';
   static const _keyOfficeLng = 'config_office_lng';
   static const _keyOfficeRadius = 'config_office_radius';
+  static const _keyCompanyId = 'config_company_id';
 
   // ─── Default dari --dart-define (di-inject saat build) ────────────────────
   // Jalankan: flutter build apk --dart-define=BASE_URL=https://api.kantorku.com
@@ -32,6 +33,7 @@ class AppConfig {
   static double? _cachedLat;
   static double? _cachedLng;
   static double? _cachedRadius;
+  static String? _cachedCompanyId;
 
   // ══════════════════════════════════════════════════════════════════════════
   // GETTERS — ASYNC (baca dari SharedPreferences, fallback ke default build)
@@ -65,6 +67,15 @@ class AppConfig {
     return _cachedRadius!;
   }
 
+  /// Get currently selected company id for multi-tenant support.
+  /// Returns null when not set (app will use server defaults).
+  static Future<String?> getCompanyId() async {
+    if (_cachedCompanyId != null) return _cachedCompanyId;
+    final prefs = await SharedPreferences.getInstance();
+    _cachedCompanyId = prefs.getString(_keyCompanyId);
+    return _cachedCompanyId;
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   // SETTERS — dipakai dari halaman Admin Settings
   // ══════════════════════════════════════════════════════════════════════════
@@ -93,6 +104,19 @@ class AppConfig {
     _cachedLng = lng;
   }
 
+  /// Set selected company id. Pass `null` to remove selection.
+  static Future<void> setCompanyId(String? id) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (id == null || id.trim().isEmpty) {
+      await prefs.remove(_keyCompanyId);
+      _cachedCompanyId = null;
+      return;
+    }
+    final clean = id.trim();
+    await prefs.setString(_keyCompanyId, clean);
+    _cachedCompanyId = clean;
+  }
+
   /// Reset semua config ke default build-time
   static Future<void> resetToDefaults() async {
     final prefs = await SharedPreferences.getInstance();
@@ -100,10 +124,12 @@ class AppConfig {
     await prefs.remove(_keyOfficeLat);
     await prefs.remove(_keyOfficeLng);
     await prefs.remove(_keyOfficeRadius);
+    await prefs.remove(_keyCompanyId);
     _cachedBaseUrl = null;
     _cachedLat = null;
     _cachedLng = null;
     _cachedRadius = null;
+    _cachedCompanyId = null;
   }
 
   /// Invalidate cache (panggil setelah set supaya getter ambil nilai baru)
@@ -112,6 +138,7 @@ class AppConfig {
     _cachedLat = null;
     _cachedLng = null;
     _cachedRadius = null;
+    _cachedCompanyId = null;
   }
 
   /// Helper: kembalikan semua config aktif sebagai Map (untuk debug / UI)
@@ -121,6 +148,7 @@ class AppConfig {
       'officeLat': await getOfficeLat(),
       'officeLng': await getOfficeLng(),
       'officeRadius': await getOfficeRadius(),
+      'companyId': await getCompanyId(),
     };
   }
 }

@@ -9,7 +9,6 @@ import 'package:lautanrejeki/pages/edit_profile_page.dart';
 import 'package:lautanrejeki/repositories/users_repository.dart';
 import 'package:lautanrejeki/services/session_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
-import 'package:lautanrejeki/models/user_model.dart';
 
 
 class ProfilePage extends StatefulWidget {

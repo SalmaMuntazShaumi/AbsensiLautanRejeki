@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:lautanrejeki/services/camera_service.dart';
 import 'package:lautanrejeki/src/colors.dart';
 
 class CameraPage extends StatefulWidget {

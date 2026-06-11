@@ -142,7 +142,7 @@ import 'package:lautanrejeki/services/notification_service.dart';
                         size: 16,
                         color: Colors.amber,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Pengajuan Time Off/Izin',
                         style: TextStyle(

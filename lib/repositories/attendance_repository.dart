@@ -16,10 +16,17 @@ class AttendanceRepository {
   /// Dipanggil setiap kali method dieksekusi agar selalu pakai URL terkini.
   Future<Dio> _getDio() async {
     final baseUrl = await AppConfig.getBaseUrl();
+    final companyId = await AppConfig.getCompanyId();
+    final headers = <String, dynamic>{
+      'Accept': 'application/json',
+    };
+    if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
+
     return Dio(BaseOptions(
       baseUrl: '$baseUrl/',
       responseType: ResponseType.json, // ← tambahkan ini
       contentType: 'application/json',
+      headers: headers,
     ));
   }
 
@@ -31,13 +38,17 @@ class AttendanceRepository {
   }) async {
     try {
       final dio = await _getDio();
+      final companyId = await AppConfig.getCompanyId();
+      final reqHeaders = <String, String>{
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+      if (companyId != null && companyId.isNotEmpty) reqHeaders['X-Company-Id'] = companyId;
+
       final response = await dio.get(
         'api/attendance/today',
         options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
+          headers: reqHeaders,
         ),
       );
 
@@ -75,14 +86,18 @@ class AttendanceRepository {
         ),
       });
 
+      final companyId = await AppConfig.getCompanyId();
+      final reqHeaders = <String, String>{
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      };
+      if (companyId != null && companyId.isNotEmpty) reqHeaders['X-Company-Id'] = companyId;
+
       final response = await dio.post(
         'api/clock-in',
         data: formData,
         options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
+          headers: reqHeaders,
         ),
       );
 
@@ -103,14 +118,18 @@ class AttendanceRepository {
   }) async {
     try {
       final dio = await _getDio();
+      final companyId = await AppConfig.getCompanyId();
+      final reqHeaders = <String, String>{
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      };
+      if (companyId != null && companyId.isNotEmpty) reqHeaders['X-Company-Id'] = companyId;
+
       final response = await dio.post(
         'api/clock-out',
         data: {'early_out_reason': reason},
         options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
+          headers: reqHeaders,
         ),
       );
 
@@ -124,12 +143,16 @@ class AttendanceRepository {
   Future<List<AttendanceHistoryModel>> fetchAttendanceHistory(String token) async {
     final apiUrl = await AppConfig.getBaseUrl();
 
+    final companyId = await AppConfig.getCompanyId();
+    final headers = <String, String>{
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
+
     final response = await http.get(
       Uri.parse('$apiUrl/api/attendance/history'), // ← endpoint baru
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
 
     final data = jsonDecode(response.body);
@@ -147,13 +170,17 @@ class AttendanceRepository {
     try {
       final dio = await _getDio();
 
+      final companyId = await AppConfig.getCompanyId();
+      final reqHeaders = <String, String>{
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      };
+      if (companyId != null && companyId.isNotEmpty) reqHeaders['X-Company-Id'] = companyId;
+
       final response = await dio.get(
         'api/attendance/today',
         options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
+          headers: reqHeaders,
         ),
       );
 

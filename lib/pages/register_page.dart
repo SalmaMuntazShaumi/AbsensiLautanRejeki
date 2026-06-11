@@ -21,7 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  String? selectedRole = null;
+  String? selectedRole;
 
   @override
   void dispose() {
@@ -98,24 +98,24 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: DropdownButton<String>(
                       items: [
                         const DropdownMenuItem(
-                          child: Text('Pilih Role'),
                           value: null,
+                          child: Text('Pilih Role'),
                         ),
                         DropdownMenuItem(
-                          child: const Text('Driver'),
                           value: 'Driver',
+                          child: const Text('Driver'),
                         ),
                         DropdownMenuItem(
-                          child: const Text('Employee'),
                           value: 'Employee',
+                          child: const Text('Employee'),
                         ),
                         DropdownMenuItem(
-                          child: const Text('Supervisor'),
                           value: 'Supervisor',
+                          child: const Text('Supervisor'),
                         ),
                         DropdownMenuItem(
-                          child: const Text('Admin'),
                           value: 'Admin',
+                          child: const Text('Admin'),
                         ),
                       ],
                       onChanged: (value) {
@@ -189,18 +189,18 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
+                        backgroundColor: WidgetStateProperty.all(
                           AppColors.primaryColor,
                         ),
                         foregroundColor:
                             const WidgetStatePropertyAll(Colors.white),
-                        padding: MaterialStateProperty.all(
+                        padding: WidgetStateProperty.all(
                           const EdgeInsets.symmetric(
                             horizontal: 40,
                             vertical: 15,
                           ),
                         ),
-                        shape: MaterialStateProperty.all(
+                        shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

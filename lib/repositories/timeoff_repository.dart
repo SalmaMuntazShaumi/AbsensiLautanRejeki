@@ -17,12 +17,16 @@ class TimeOffRepository {
   }) async {
     try {
       final apiUrl = await _baseUrl();
+      final companyId = await AppConfig.getCompanyId();
+      final headers = <String, String>{
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+      if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
+
       final response = await http.post(
         Uri.parse('$apiUrl/api/time-off'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: {
           'type': type,
           'start_date': startDate,
@@ -45,12 +49,16 @@ class TimeOffRepository {
 
   Future<List<dynamic>> getTimeOff({required String token}) async {
     final apiUrl = await _baseUrl();
+    final companyId = await AppConfig.getCompanyId();
+    final headers = <String, String>{
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    if (companyId != null && companyId.isNotEmpty) headers['X-Company-Id'] = companyId;
+
     final response = await http.get(
       Uri.parse('$apiUrl/api/time-off'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: headers,
     );
 
     return jsonDecode(response.body);

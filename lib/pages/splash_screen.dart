@@ -4,7 +4,6 @@ import 'package:lautanrejeki/bloc/auth/auth_bloc.dart';
 import 'package:lautanrejeki/bloc/auth/auth_event.dart';
 import 'package:lautanrejeki/bloc/auth/auth_state.dart';
 import 'package:lautanrejeki/services/notification_service.dart';
-import 'package:lautanrejeki/src/colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

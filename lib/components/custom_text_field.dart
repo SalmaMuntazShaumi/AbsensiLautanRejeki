@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatefulWidget {
-  TextEditingController controller = new TextEditingController();
+  TextEditingController controller = TextEditingController();
   String labelText;
 
 

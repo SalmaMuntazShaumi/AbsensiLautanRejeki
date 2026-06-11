@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:lautanrejeki/config/app_config.dart';
 import 'package:lautanrejeki/src/colors.dart';
 
@@ -16,6 +15,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _urlCtrl = TextEditingController();
+  final _companyCtrl = TextEditingController();
   final _latCtrl = TextEditingController();
   final _lngCtrl = TextEditingController();
   final _radiusCtrl = TextEditingController();
@@ -34,6 +34,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
     final config = await AppConfig.getAll();
     setState(() {
       _urlCtrl.text = config['baseUrl'] as String;
+      _companyCtrl.text = (config['companyId'] as String?) ?? '';
       _latCtrl.text = (config['officeLat'] as double).toString();
       _lngCtrl.text = (config['officeLng'] as double).toString();
       _radiusCtrl.text = (config['officeRadius'] as double).toString();
@@ -51,6 +52,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
 
     try {
       await AppConfig.setBaseUrl(_urlCtrl.text.trim());
+      await AppConfig.setCompanyId(_companyCtrl.text.trim().isEmpty ? null : _companyCtrl.text.trim());
       await AppConfig.setOfficeLocation(
         lat: double.parse(_latCtrl.text.trim()),
         lng: double.parse(_lngCtrl.text.trim()),
@@ -104,6 +106,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
   @override
   void dispose() {
     _urlCtrl.dispose();
+    _companyCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
     _radiusCtrl.dispose();
@@ -145,6 +148,53 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
               ),
 
               const SizedBox(height: 28),
+
+              // ── Seksi Company (multi-tenant) ───────────────────────
+              _sectionTitle('🏢  Company (opsional)'),
+              const SizedBox(height: 8),
+              const Text(
+                'Masukkan Company ID untuk mengarahkan aplikasi ke tenant tertentu. Kosongkan untuk menggunakan default server.',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              // Preset buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Preset: lautan-rejeki
+                        setState(() {
+                          _urlCtrl.text = 'https://api.lautanrejeki.id';
+                          _companyCtrl.text = 'lautan-rejeki';
+                        });
+                      },
+                      child: const Text('Preset: lautan-rejeki'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Preset: lautan-rejeki-luas (placeholders)
+                        setState(() {
+                          _urlCtrl.text = 'https://api.lautanrejeki-luas.example';
+                          _companyCtrl.text = 'lautan-rejeki-luas';
+                        });
+                      },
+                      child: const Text('Preset: lautan-rejeki-luas'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              _buildTextField(
+                controller: _companyCtrl,
+                label: 'Company ID (opsional)',
+                hint: 'contoh: company-123',
+              ),
+              const SizedBox(height: 20),
 
               // ── Seksi Lokasi Kantor ───────────────────────────────
               _sectionTitle('📍  Koordinat Kantor'),

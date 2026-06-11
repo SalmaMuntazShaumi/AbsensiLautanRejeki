@@ -7,5 +7,5 @@ class AppColors extends Color{
   static const Color backgroundColor = Color(0xFFFDFDFD);
   static const Color textColor = Color(0xFF4F4F4F);
 
-  const AppColors(int value) : super(value);
+  const AppColors(super.value);
 }

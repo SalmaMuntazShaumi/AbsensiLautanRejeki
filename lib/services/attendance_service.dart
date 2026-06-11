@@ -1,4 +1,3 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 
 import 'location_service.dart';
@@ -8,7 +7,7 @@ class AttendanceService {
   // =========================
   // GET CURRENT TIME
   // =========================
-  static String getCurrentTime() {
+  static String getCurrentTime() {  
 
     return DateFormat(
       'HH:mm',
